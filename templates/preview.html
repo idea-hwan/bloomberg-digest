@@ -54,7 +54,7 @@
       display: flex;
       gap: 6px;
     }
-    nav button, .dates button, .windows button, .theme {
+    nav button, .dates button, .windows button, .theme, .fold {
       font: inherit;
       color: inherit;
       background: transparent;
@@ -147,7 +147,26 @@
     }
     ol, .stories { list-style: none; margin: 0; padding: 0; }
     li + li { border-top: 1px solid var(--line); }
-    ol.brief li { line-height: 1.5; align-items: start; }
+    #morning li { display: block; padding: 0; }
+    #morning .fold {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: baseline;
+      width: 100%;
+      padding: 11px 0;
+      text-align: left;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+    #morning .summary {
+      display: none;
+      margin: 0 0 14px 38px;
+      font-size: 17px;
+      line-height: 1.5;
+      letter-spacing: -0.02em;
+    }
+    #morning .fold[aria-expanded="true"] + .summary { display: block; }
     .stories li.note { display: block; }
     ol li, .stories li {
       display: grid;
@@ -237,6 +256,7 @@
       .market .value span { display: block; margin-top: 2px; font-size: 13px; }
       .market strong { font-size: 17px; }
       ol li, .stories li { font-size: 16px; padding: 13px 0; }
+      #morning .fold, #morning .summary { font-size: 16px; }
       .hits li { display: block; padding: 10px 0; }
       .hits li span:nth-child(1),
       .hits li span:nth-child(2) { display: inline; }
@@ -344,7 +364,14 @@
       `).join("");
       const items = (morning && morning.items) || [];
       morningEl.innerHTML = items.length
-        ? items.map((item) => `<li><span class="num">${item.n}</span><span>${item.headline}</span></li>`).join("")
+        ? items.map((item) => `
+          <li>
+            <button type="button" class="fold" aria-expanded="false">
+              <span class="num">${item.n}</span><span>${esc(item.headline)}</span>
+            </button>
+            ${item.summary ? `<p class="summary">${esc(item.summary)}</p>` : ""}
+          </li>
+        `).join("")
         : `<p class="empty">이 날은 오늘 아침 5가지가 없습니다.</p>`;
       const brief = Boolean(daily && daily.five);
       fiveSection.hidden = !brief;
@@ -388,6 +415,13 @@
         </button>
       `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
     }
+
+    morningEl.addEventListener("click", (event) => {
+      const button = event.target.closest(".fold");
+      if (!button) return;
+      const open = button.getAttribute("aria-expanded") === "true";
+      button.setAttribute("aria-expanded", open ? "false" : "true");
+    });
 
     datesEl.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-date]");

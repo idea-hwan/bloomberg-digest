@@ -1,6 +1,17 @@
 from datetime import date
 
-from app.preview import daily_view, recent_dates, themes_for
+from app.preview import daily_view, recent_dates, summarize, themes_for
+
+
+def test_morning_summary_keeps_a_few_lines_and_drops_the_rest():
+    body = (
+        "첫 문장이다. 둘째 문장으로 핵심을 조금 더 보탠다. "
+        "셋째 문장이다. 넷째 문장이다. 다섯째 문장으로 기사가 길어진다. "
+        "여섯째 문장까지 본문이 이어진다."
+    )
+    summary = summarize(body)
+    assert summary == "첫 문장이다. 둘째 문장으로 핵심을 조금 더 보탠다."
+    assert "여섯째" not in summary
 
 
 def test_new_layout_starts_on_oct_23_and_keeps_older_days():

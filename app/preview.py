@@ -43,6 +43,24 @@ def five_lines(body: str) -> list[str]:
     return [part.strip() for part in (body or "").split("\n\n") if part.strip()]
 
 
+def summarize(body: str, limit: int = 130) -> str:
+    """Lead sentences only, about four or five lines on a phone."""
+    text = re.sub(r"\s+", " ", body or "").strip()
+    sentences = [part.strip() for part in re.findall(r".+?다\.", text)]
+    if not sentences:
+        return text
+    chosen: list[str] = []
+    total = 0
+    for sentence in sentences:
+        if chosen and total + len(sentence) > limit:
+            break
+        chosen.append(sentence)
+        total += len(sentence)
+        if len(chosen) == 2:
+            break
+    return " ".join(chosen)
+
+
 def daily_view(row: dict) -> dict:
     commentary = [
         section.get("heading") or ""
@@ -78,7 +96,14 @@ def _load_days() -> dict[str, dict]:
             day["morning"] = {
                 "hook": row.get("hook") or "",
                 "markets": row.get("markets") or [],
-                "items": [{"n": item["n"], "headline": item["headline"]} for item in row.get("items") or []],
+                "items": [
+                    {
+                        "n": item["n"],
+                        "headline": item["headline"],
+                        "summary": summarize(item.get("body") or ""),
+                    }
+                    for item in row.get("items") or []
+                ],
             }
         elif row["series"] == "markets_daily":
             day["daily"] = daily_view(row)
