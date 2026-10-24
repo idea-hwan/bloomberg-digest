@@ -202,16 +202,40 @@ def _macro(dates: set[str]) -> tuple[str, list]:
         ({"2026-10-14"}, "윌리엄스는 올해 한 차례 추가 인상을 말했고, 내년 인상은 불필요하다고 봤다.", [("2026-10-14", ("윌리엄스",))]),
         ({"2026-10-15"}, "9월 CPI는 0.6% 올랐다.", [("2026-10-15", ("CPI",))]),
     ])
-    late, late_marks = _take(dates, [
-        ({"2026-10-19"}, "미국 재정적자는 1.99조 달러, 이자비용은 사상 최대를 기록했다.", [("2026-10-19", ("재정적자",))]),
-        ({"2026-10-20"}, "프랑스 시위 이후 국채 불안이 다시 켜졌다.", [("2026-10-20", ("프랑스 시위",))]),
-        ({"2026-10-21"}, "CAC40는 최대 숏으로 집계됐고, 프랭클린템플턴은 유로존 부채위기 2.0을 경고했다.", [("2026-10-21", ("CAC40", "프랭클린"))]),
-        ({"2026-10-22"}, "프랑스 10년물은 5%를 넘었고, 독일과의 금리차는 15년 만에 가장 넓어졌다. 금리 급등으로 미국과 유럽의 부채 발행은 줄줄이 미뤄졌다.", [("2026-10-22", ("5%", "부채발행", "금리 급등"))]),
-        ({"2026-10-23"}, "프랑스 국채 불안이 이탈리아로 번지는 조짐이 나왔다.", [("2026-10-23", ("伊로", "佛국채"))]),
-    ])
+    late, late_marks = _macro_late(dates)
     if not early and not late:
         return "변화없음.", []
-    return _join("약세.", [early, late]), early_marks + late_marks
+    parts = []
+    if early:
+        parts.append(" ".join(early))
+    if late:
+        parts.append(" ".join(late))
+    return "\n\n".join(parts), early_marks + late_marks
+
+
+def _macro_late(dates: set[str]) -> tuple[list[str], list]:
+    lines: list[str] = []
+    marks: list[tuple[str, tuple[str, ...]]] = []
+    if "2026-10-19" in dates and "2026-10-20" in dates:
+        lines.append("미국 재정적자가 1.99조 달러까지 늘고 이자비용이 사상 최대를 기록한 자리에서, 프랑스 시위가 국채 불안을 다시 켰다.")
+        marks.append(("2026-10-19", ("재정적자",)))
+        marks.append(("2026-10-20", ("프랑스 시위",)))
+    elif "2026-10-19" in dates:
+        lines.append("미국 재정적자는 1.99조 달러까지 늘었고, 이자비용은 사상 최대를 기록했다.")
+        marks.append(("2026-10-19", ("재정적자",)))
+    elif "2026-10-20" in dates:
+        lines.append("프랑스 시위 이후 국채 불안이 다시 켜졌다.")
+        marks.append(("2026-10-20", ("프랑스 시위",)))
+    if "2026-10-21" in dates:
+        lines.append("시장은 CAC40를 최대 숏으로 쌓았고, 프랭클린템플턴은 유로존 부채위기 2.0을 경고했다.")
+        marks.append(("2026-10-21", ("CAC40", "프랭클린")))
+    if "2026-10-22" in dates:
+        lines.append("프랑스 10년물이 5%를 넘자 독일 국채와의 금리차는 15년 만에 가장 넓어졌고, 치솟은 금리에 미국과 유럽의 부채 발행은 뒤로 밀렸다.")
+        marks.append(("2026-10-22", ("5%", "부채발행", "금리 급등")))
+    if "2026-10-23" in dates:
+        lines.append("국채 약세는 프랑스에서 이탈리아로 번지는 조짐으로 이어졌다.")
+        marks.append(("2026-10-23", ("伊로", "佛국채")))
+    return lines, marks
 
 
 def _geopolitics(dates: set[str]) -> tuple[str, list]:
