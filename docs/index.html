@@ -54,7 +54,7 @@
       display: flex;
       gap: 6px;
     }
-    nav button, .dates button, .windows button, .theme, .fold {
+    nav button, .cal button, .windows button, .theme, .fold {
       font: inherit;
       color: inherit;
       background: transparent;
@@ -75,35 +75,40 @@
       margin: 0 auto;
       padding: 20px 24px 64px;
     }
-    .dates {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      overscroll-behavior-x: contain;
-      padding-bottom: 8px;
-      margin-bottom: 22px;
-      scroll-snap-type: x proximity;
-      scrollbar-width: none;
+    .cal {
+      width: max-content;
+      margin: 0 0 22px;
     }
-    .dates::-webkit-scrollbar { display: none; }
-    .dates button {
-      flex: 0 0 auto;
-      scroll-snap-align: start;
-      min-width: 72px;
-      padding: 8px 10px 9px;
-      border-radius: 12px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      text-align: left;
+    .cal-month {
+      margin: 0 0 8px;
+      color: var(--muted);
+      font-size: 13px;
     }
-    .dates button[aria-selected="true"] {
-      border-color: var(--ink);
+    .cal section + section { margin-top: 16px; }
+    .cal-dow, .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 36px);
+      gap: 4px;
+    }
+    .cal-dow { margin-bottom: 4px; }
+    .cal-dow span {
+      text-align: center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .cal-grid button, .cal-grid span {
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 9px;
+      font-size: 14px;
+      font-weight: 650;
+    }
+    .cal-grid button[aria-selected="true"] {
       background: var(--ink);
       color: var(--paper);
     }
-    .dates .d { display: block; font-weight: 700; font-size: 15px; }
-    .dates .w { display: block; font-size: 12px; color: var(--muted); }
-    .dates button[aria-selected="true"] .w { color: #d9d3c7; }
+    .cal-grid .off { color: #c8c2b6; font-weight: 500; }
     .hook {
       font-size: 34px;
       line-height: 1.25;
@@ -271,7 +276,8 @@
       h1 { font-size: 26px; }
       nav button { min-height: 44px; padding: 8px 16px; }
       main { padding-top: 16px; padding-bottom: 40px; }
-      .dates button { min-height: 52px; }
+      .cal-dow, .cal-grid { grid-template-columns: repeat(5, 40px); }
+      .cal-grid button, .cal-grid span { height: 40px; font-size: 15px; }
       .hook { font-size: 26px; line-height: 1.32; }
       .dek { font-size: 16px; }
       .markets { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -303,7 +309,7 @@
   </header>
   <main>
     <div id="view-day">
-      <div class="dates" id="dates"></div>
+      <div class="cal" id="dates"></div>
       <h2 class="hook" id="hook"></h2>
       <p class="dek" id="dek" hidden></p>
       <div class="markets" id="markets"></div>
@@ -366,14 +372,36 @@
     }
 
     function renderDates() {
-      datesEl.innerHTML = DATA.dates.map((day) => `
-        <button type="button" data-date="${day}" aria-selected="${day === selected}">
-          <span class="d">${shortDate(day)}</span>
-          <span class="w">${DATA.weekdays[day]}</span>
-        </button>
-      `).join("");
-      const current = datesEl.querySelector('[aria-selected="true"]');
-      if (current) current.scrollIntoView({ inline: "nearest", block: "nearest" });
+      const byMonth = new Map();
+      for (const day of DATA.dates) {
+        const key = day.slice(0, 7);
+        if (!byMonth.has(key)) byMonth.set(key, []);
+        byMonth.get(key).push(day);
+      }
+      datesEl.innerHTML = [...byMonth.keys()].sort().reverse().map((key) => {
+        const [year, month] = key.split("-").map(Number);
+        const present = new Set(byMonth.get(key));
+        const lastDay = Math.max(...[...present].map((day) => Number(day.slice(8))));
+        const start = new Date(year, month - 1, 1).getDay();
+        const lead = (start + 6) % 7;
+        const cells = [];
+        for (let i = 0; i < (lead > 4 ? 0 : lead); i += 1) cells.push("<span></span>");
+        for (let day = 1; day <= lastDay; day += 1) {
+          const dow = new Date(year, month - 1, day).getDay();
+          if (dow === 0 || dow === 6) continue;
+          const iso = `${key}-${String(day).padStart(2, "0")}`;
+          cells.push(present.has(iso)
+            ? `<button type="button" data-date="${iso}" aria-selected="${iso === selected}" aria-label="${month}월 ${day}일">${day}</button>`
+            : `<span class="off">${day}</span>`);
+        }
+        return `
+          <section>
+            <p class="cal-month">${month}월</p>
+            <div class="cal-dow"><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span></div>
+            <div class="cal-grid">${cells.join("")}</div>
+          </section>
+        `;
+      }).join("");
     }
 
     function renderDay() {
