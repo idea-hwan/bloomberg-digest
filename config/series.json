@@ -1,0 +1,15 @@
+{
+  "label": "bloomberg",
+  "series": [
+    {
+      "id": "morning5",
+      "name": "오늘 아침 5가지",
+      "subject_contains": "오늘 아침 꼭 알아야 할 5가지"
+    },
+    {
+      "id": "markets_daily",
+      "name": "Markets Daily",
+      "subject_contains": "Markets Daily"
+    }
+  ]
+}

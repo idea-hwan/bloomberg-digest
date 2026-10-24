@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>블룸버그 다이제스트</title>
+  <style>
+    :root {
+      --paper: #f3f0e8;
+      --card: #fffcf7;
+      --ink: #1c1915;
+      --muted: #6f6a62;
+      --line: #e4dfd4;
+      --up: #b42318;
+      --down: #1d4f91;
+      --flat: #6f6a62;
+      --chip: #efeae0;
+      --accent: #1c1915;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 24px 0;
+    }
+    .mark {
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 4px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+    nav {
+      display: flex;
+      gap: 6px;
+    }
+    nav button, .dates button, .windows button, .theme {
+      font: inherit;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+    nav button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+    }
+    nav button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px 24px 64px;
+    }
+    .dates {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 22px;
+    }
+    .dates button {
+      flex: 0 0 auto;
+      min-width: 72px;
+      padding: 8px 10px 9px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+    .dates button[aria-selected="true"] {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .dates .d { display: block; font-weight: 700; font-size: 15px; }
+    .dates .w { display: block; font-size: 12px; color: var(--muted); }
+    .dates button[aria-selected="true"] .w { color: #d9d3c7; }
+    .hook {
+      font-size: 34px;
+      line-height: 1.25;
+      letter-spacing: -0.04em;
+      margin: 0 0 18px;
+      font-weight: 750;
+    }
+    .markets {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .market {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px 11px;
+    }
+    .market .name { color: var(--muted); font-size: 12px; }
+    .market .value {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .market strong { font-size: 18px; font-weight: 700; }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+    .flat { color: var(--flat); }
+    section { margin-top: 8px; }
+    section h2 {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 650;
+      margin: 22px 0 10px;
+    }
+    ol, .stories { list-style: none; margin: 0; padding: 0; }
+    li + li { border-top: 1px solid var(--line); }
+    ol li, .stories li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: baseline;
+      padding: 11px 0;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+    .num, .series {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      padding-top: 4px;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 12px 0 4px;
+    }
+    .windows { display: flex; gap: 8px; margin-bottom: 18px; }
+    .windows button {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .windows button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+    .theme {
+      width: 100%;
+      text-align: left;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .theme-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .theme-head strong { font-size: 18px; letter-spacing: -0.03em; }
+    .count { color: var(--muted); font-size: 13px; }
+    .hits { display: none; margin: 12px 0 0; padding: 0; list-style: none; }
+    .theme[aria-expanded="true"] .hits { display: block; }
+    .hits li {
+      display: grid;
+      grid-template-columns: 52px 52px 1fr;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 15px;
+      border-top: 1px solid var(--line);
+    }
+    footer {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px 28px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 720px) {
+      .hook { font-size: 28px; }
+      .markets { grid-template-columns: 1fr 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="mark">Bloomberg digest</p>
+      <h1>그날의 레터</h1>
+    </div>
+    <nav>
+      <button type="button" id="tab-day" aria-selected="true">그날</button>
+      <button type="button" id="tab-themes" aria-selected="false">반복</button>
+    </nav>
+  </header>
+  <main>
+    <div id="view-day">
+      <div class="dates" id="dates"></div>
+      <h2 class="hook" id="hook"></h2>
+      <div class="markets" id="markets"></div>
+      <section>
+        <h2>오늘 아침 5가지</h2>
+        <ol id="morning"></ol>
+      </section>
+      <section>
+        <h2>Markets Daily</h2>
+        <ul class="stories" id="daily"></ul>
+      </section>
+    </div>
+    <div id="view-themes" hidden>
+      <div class="windows">
+        <button type="button" id="win-week" aria-selected="true"></button>
+        <button type="button" id="win-month" aria-selected="false"></button>
+      </div>
+      <div id="theme-list"></div>
+    </div>
+  </main>
+  <footer>제목과 시세만 보여 줍니다.</footer>
+  <script>
+    const DATA = /*__DATA__*/ null;
+
+    const datesEl = document.querySelector("#dates");
+    const hookEl = document.querySelector("#hook");
+    const marketsEl = document.querySelector("#markets");
+    const morningEl = document.querySelector("#morning");
+    const dailyEl = document.querySelector("#daily");
+    const themeList = document.querySelector("#theme-list");
+    const viewDay = document.querySelector("#view-day");
+    const viewThemes = document.querySelector("#view-themes");
+    let selected = DATA.dates.find((day) => DATA.days[day].morning) || DATA.dates[0];
+    let windowKey = "week";
+
+    function tone(change) {
+      const value = String(change || "").trim();
+      if (value.startsWith("+") && !value.startsWith("+0.0")) return "up";
+      if (value.startsWith("-") || value.startsWith("−")) return "down";
+      return "flat";
+    }
+
+    function shortDate(day) {
+      const [, month, date] = day.split("-");
+      return `${Number(month)}/${Number(date)}`;
+    }
+
+    function renderDates() {
+      datesEl.innerHTML = DATA.dates.map((day) => `
+        <button type="button" data-date="${day}" aria-selected="${day === selected}">
+          <span class="d">${shortDate(day)}</span>
+          <span class="w">${DATA.weekdays[day]}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderDay() {
+      const day = DATA.days[selected];
+      const morning = day.morning;
+      const daily = day.daily;
+      hookEl.textContent = (morning && morning.hook) || (daily && daily.headline) || "이 날의 레터";
+      const markets = (morning && morning.markets) || [];
+      marketsEl.innerHTML = markets.map((row) => `
+        <article class="market">
+          <div class="name">${row.name}</div>
+          <div class="value"><strong>${row.value}</strong><span class="${tone(row.change)}">${row.change}</span></div>
+        </article>
+      `).join("");
+      const items = (morning && morning.items) || [];
+      morningEl.innerHTML = items.length
+        ? items.map((item) => `<li><span class="num">${item.n}</span><span>${item.headline}</span></li>`).join("")
+        : `<p class="empty">이 날은 오늘 아침 5가지가 없습니다.</p>`;
+      const sections = (daily && daily.sections) || [];
+      const title = daily && daily.headline ? `<li><span class="series">제목</span><span>${daily.headline}</span></li>` : "";
+      dailyEl.innerHTML = daily
+        ? title + sections.map((heading) => `<li><span class="series"></span><span>${heading}</span></li>`).join("")
+        : `<p class="empty">이 날은 Markets Daily가 없습니다.</p>`;
+    }
+
+    function renderThemes() {
+      const windowData = DATA.windows[windowKey];
+      document.querySelector("#win-week").textContent = DATA.windows.week.label;
+      document.querySelector("#win-month").textContent = DATA.windows.month.label;
+      document.querySelector("#win-week").setAttribute("aria-selected", windowKey === "week");
+      document.querySelector("#win-month").setAttribute("aria-selected", windowKey === "month");
+      const themes = windowData.themes;
+      themeList.innerHTML = themes.length ? themes.map((theme, index) => `
+        <button class="theme" type="button" aria-expanded="${index === 0}" data-theme="${index}">
+          <div class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></div>
+          <ul class="hits">
+            ${theme.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
+          </ul>
+        </button>
+      `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
+    }
+
+    datesEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-date]");
+      if (!button) return;
+      selected = button.dataset.date;
+      renderDates();
+      renderDay();
+    });
+
+    document.querySelector("#tab-day").addEventListener("click", () => {
+      viewDay.hidden = false;
+      viewThemes.hidden = true;
+      document.querySelector("#tab-day").setAttribute("aria-selected", "true");
+      document.querySelector("#tab-themes").setAttribute("aria-selected", "false");
+      document.querySelector("h1").textContent = "그날의 레터";
+    });
+    document.querySelector("#tab-themes").addEventListener("click", () => {
+      viewDay.hidden = true;
+      viewThemes.hidden = false;
+      document.querySelector("#tab-day").setAttribute("aria-selected", "false");
+      document.querySelector("#tab-themes").setAttribute("aria-selected", "true");
+      document.querySelector("h1").textContent = "반복된 이야기";
+      renderThemes();
+    });
+    document.querySelector(".windows").addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      windowKey = button.id === "win-month" ? "month" : "week";
+      renderThemes();
+    });
+    themeList.addEventListener("click", (event) => {
+      const theme = event.target.closest(".theme");
+      if (!theme) return;
+      theme.setAttribute("aria-expanded", theme.getAttribute("aria-expanded") !== "true");
+    });
+
+    renderDates();
+    renderDay();
+    renderThemes();
+  </script>
+</body>
+</html>

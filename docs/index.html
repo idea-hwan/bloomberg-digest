@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>블룸버그 다이제스트</title>
+  <style>
+    :root {
+      --paper: #f3f0e8;
+      --card: #fffcf7;
+      --ink: #1c1915;
+      --muted: #6f6a62;
+      --line: #e4dfd4;
+      --up: #b42318;
+      --down: #1d4f91;
+      --flat: #6f6a62;
+      --chip: #efeae0;
+      --accent: #1c1915;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+      line-height: 1.45;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 24px 0;
+    }
+    .mark {
+      font-size: 13px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 0 0 4px;
+    }
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin: 0;
+    }
+    nav {
+      display: flex;
+      gap: 6px;
+    }
+    nav button, .dates button, .windows button, .theme {
+      font: inherit;
+      color: inherit;
+      background: transparent;
+      border: 0;
+      cursor: pointer;
+    }
+    nav button {
+      padding: 8px 14px;
+      border-radius: 999px;
+      color: var(--muted);
+    }
+    nav button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 20px 24px 64px;
+    }
+    .dates {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 22px;
+    }
+    .dates button {
+      flex: 0 0 auto;
+      min-width: 72px;
+      padding: 8px 10px 9px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      text-align: left;
+    }
+    .dates button[aria-selected="true"] {
+      border-color: var(--ink);
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .dates .d { display: block; font-weight: 700; font-size: 15px; }
+    .dates .w { display: block; font-size: 12px; color: var(--muted); }
+    .dates button[aria-selected="true"] .w { color: #d9d3c7; }
+    .hook {
+      font-size: 34px;
+      line-height: 1.25;
+      letter-spacing: -0.04em;
+      margin: 0 0 18px;
+      font-weight: 750;
+    }
+    .markets {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .market {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px 11px;
+    }
+    .market .name { color: var(--muted); font-size: 12px; }
+    .market .value {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-top: 4px;
+      font-variant-numeric: tabular-nums;
+    }
+    .market strong { font-size: 18px; font-weight: 700; }
+    .up { color: var(--up); }
+    .down { color: var(--down); }
+    .flat { color: var(--flat); }
+    section { margin-top: 8px; }
+    section h2 {
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 650;
+      margin: 22px 0 10px;
+    }
+    ol, .stories { list-style: none; margin: 0; padding: 0; }
+    li + li { border-top: 1px solid var(--line); }
+    ol li, .stories li {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 10px;
+      align-items: baseline;
+      padding: 11px 0;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+    .num, .series {
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+      font-size: 13px;
+      padding-top: 4px;
+    }
+    .empty {
+      color: var(--muted);
+      padding: 12px 0 4px;
+    }
+    .windows { display: flex; gap: 8px; margin-bottom: 18px; }
+    .windows button {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: var(--card);
+      border: 1px solid var(--line);
+      color: var(--muted);
+    }
+    .windows button[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+      border-color: var(--ink);
+    }
+    .theme {
+      width: 100%;
+      text-align: left;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+    .theme-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .theme-head strong { font-size: 18px; letter-spacing: -0.03em; }
+    .count { color: var(--muted); font-size: 13px; }
+    .hits { display: none; margin: 12px 0 0; padding: 0; list-style: none; }
+    .theme[aria-expanded="true"] .hits { display: block; }
+    .hits li {
+      display: grid;
+      grid-template-columns: 52px 52px 1fr;
+      gap: 8px;
+      padding: 8px 0;
+      font-size: 15px;
+      border-top: 1px solid var(--line);
+    }
+    footer {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 24px 28px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 720px) {
+      .hook { font-size: 28px; }
+      .markets { grid-template-columns: 1fr 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="mark">Bloomberg digest</p>
+      <h1>그날의 레터</h1>
+    </div>
+    <nav>
+      <button type="button" id="tab-day" aria-selected="true">그날</button>
+      <button type="button" id="tab-themes" aria-selected="false">반복</button>
+    </nav>
+  </header>
+  <main>
+    <div id="view-day">
+      <div class="dates" id="dates"></div>
+      <h2 class="hook" id="hook"></h2>
+      <div class="markets" id="markets"></div>
+      <section>
+        <h2>오늘 아침 5가지</h2>
+        <ol id="morning"></ol>
+      </section>
+      <section>
+        <h2>Markets Daily</h2>
+        <ul class="stories" id="daily"></ul>
+      </section>
+    </div>
+    <div id="view-themes" hidden>
+      <div class="windows">
+        <button type="button" id="win-week" aria-selected="true"></button>
+        <button type="button" id="win-month" aria-selected="false"></button>
+      </div>
+      <div id="theme-list"></div>
+    </div>
+  </main>
+  <footer>제목과 시세만 보여 줍니다.</footer>
+  <script>
+    const DATA = {"dates": ["2026-10-23", "2026-10-22", "2026-10-21", "2026-10-20", "2026-10-19", "2026-10-16", "2026-10-15", "2026-10-14", "2026-10-13", "2026-10-12", "2026-10-09", "2026-10-08", "2026-10-07", "2026-10-06", "2026-10-05", "2026-10-02", "2026-10-01"], "days": {"2026-10-20": {"date": "2026-10-20", "morning": {"hook": "반도체 반등, 프랑스 국채불안", "markets": [{"name": "S&P 500 지수", "value": "7,690.73", "change": "+0.4%"}, {"name": "나스닥 100 지수", "value": "29,529.34", "change": "+1.2%"}, {"name": "美 국채 10년물 금리", "value": "5.14%", "change": "+0.07"}, {"name": "달러-원 환율", "value": "₩1,332.44", "change": "-0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,223.20", "change": "+0.1%"}, {"name": "브렌트 원유 선물", "value": "$109.18", "change": "-0.6%"}], "items": [{"n": 1, "headline": "JP모간 “코어위브 부채 우려 과도”"}, {"n": 2, "headline": "프랑스 시위에 국채 불안 재점화"}, {"n": 3, "headline": "메르츠 “유럽, 러시아 위협 과소평가”"}, {"n": 4, "headline": "美, 연방기관서 中딥시크 사용 금지"}, {"n": 5, "headline": "머스크, 美 어린이에 스페이스X 주식 1주씩"}]}, "daily": {"headline": "AI bellwether in freefall", "sections": ["‘Fear and pessimism’", "Netflix slump"]}}, "2026-10-16": {"date": "2026-10-16", "morning": null, "daily": {"headline": "Tech’s rough week", "sections": ["Tough week for tech", "Irresistible rally"]}}, "2026-10-21": {"date": "2026-10-21", "morning": {"hook": "AI 옥석가리기, 佛증시 ‘최대숏’", "markets": [{"name": "S&P 500 지수", "value": "7,712.57", "change": "+0.3%"}, {"name": "나스닥 100 지수", "value": "29,490.28", "change": "-0.1%"}, {"name": "美 국채 10년물 금리", "value": "5.11%", "change": "-0.03"}, {"name": "달러-원 환율", "value": "₩1,326.61", "change": "-0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,220.50", "change": "-0.2%"}, {"name": "브렌트 원유 선물", "value": "$108.97", "change": "-0.5%"}], "items": [{"n": 1, "headline": "佛 정치·재정 불안에 자산기피…CAC40 ‘최대 숏’"}, {"n": 2, "headline": "프랭클린템플턴 ‘유로존 부채위기 2.0’ 경고"}, {"n": 3, "headline": "AI 옥석가리기…IPO·주가 ‘휘청’"}, {"n": 4, "headline": "美 주택시장 한파…미결판매 사상 최저·착공 5.2%↓"}, {"n": 5, "headline": "AI 열풍에 헤지펀드 대출 수요 폭증…바클레이스 자본 재배분"}]}, "daily": {"headline": "SpaceX-Tesla talk gets real", "sections": ["Musk’s mashup dreams", "Fast money power"]}}, "2026-10-19": {"date": "2026-10-19", "morning": {"hook": "코어위브發 AI불안, 유가 110불", "markets": [{"name": "S&P 500 지수", "value": "7,659.44", "change": "-1.1%"}, {"name": "나스닥 100 지수", "value": "29,187.55", "change": "-2.5%"}, {"name": "美 국채 10년물 금리", "value": "5.07%", "change": "+0.01"}, {"name": "달러-원 환율", "value": "₩1,334.25", "change": "-0.6%"}, {"name": "블룸버그 달러 지수", "value": "1,222.47", "change": "-0.2%"}, {"name": "브렌트 원유 선물", "value": "$109.86", "change": "+3.7%"}], "items": [{"n": 1, "headline": "코어위브 불안…AI 투자 놓고 공포와 낙관론 충돌"}, {"n": 2, "headline": "브렌트유 110달러…유라시아 ‘확전 가능성 65%’"}, {"n": 3, "headline": "美 재정적자 1.99조달러…이자비용 사상 최대"}, {"n": 4, "headline": "美재무부, 국채 입찰 규모 변경 가능성 의견 타진"}, {"n": 5, "headline": "中, AI 수출통제 추진"}]}, "daily": {"headline": "France besieged", "sections": ["No good options", "Buckle up"]}}, "2026-10-02": {"date": "2026-10-02", "morning": {"hook": "美국채 반등, 佛재정우려·英6%", "markets": [{"name": "S&P 500 지수", "value": "7,666.45", "change": "+0.2%"}, {"name": "나스닥 100 지수", "value": "30,501.56", "change": "+0.3%"}, {"name": "美 국채 10년물 금리", "value": "5.24%", "change": "-0.04"}, {"name": "달러-원 환율", "value": "₩1,360.00", "change": "+0.1%"}, {"name": "블룸버그 달러 지수", "value": "1,225.00", "change": "+0.4%"}], "items": [{"n": 1, "headline": "美, 이란 인근 항모 추가 배치할 수도…공격 확대 선택지"}, {"n": 2, "headline": "美 9월 제조업 확장세 지속…비용·공급망 압박은 가중"}, {"n": 3, "headline": "연준부의장 “시간 필요”...카시카리 “물가안정은 연준 임무”"}, {"n": 4, "headline": "英30년물 6% 돌파…G7 중 유로존 위기 이후 처음"}, {"n": 5, "headline": "인플레 선제 대응국 채권 주목…호주·독일 선호"}]}, "daily": {"headline": "Stocks take hit from rates", "sections": ["Stocks feel the pain", "France’s crisis"]}}, "2026-10-05": {"date": "2026-10-05", "morning": null, "daily": {"headline": "Europe’s contagion risk", "sections": ["Whispers of contagion"]}}, "2026-10-23": {"date": "2026-10-23", "morning": {"hook": "나스닥 급락, 佛불안 전이조짐", "markets": [{"name": "S&P 500 지수", "value": "7,663.43", "change": "-1.2%"}, {"name": "나스닥 100 지수", "value": "28,958.69", "change": "-2.9%"}, {"name": "美 국채 10년물 금리", "value": "4.95%", "change": "-0.17"}, {"name": "달러-원 환율", "value": "₩1,326.65", "change": "+0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,220.22", "change": "-0.1%"}, {"name": "브렌트 원유 선물", "value": "$113.05", "change": "+3.9%"}], "items": [{"n": 1, "headline": "블랙스톤 “AI 버블 아냐…수요 폭발적”"}, {"n": 2, "headline": "중동 긴장 고조…美외교관 철수·아람코 대피"}, {"n": 3, "headline": "佛국채 불안 확산…伊로 전이 조짐"}, {"n": 4, "headline": "中규제·AI우려에 알리바바↓…홍콩 기술주 투매"}, {"n": 5, "headline": "바클레이스, AI 활용해 5천명 감원"}]}, "daily": {"headline": "Sifting through election scenarios", "sections": ["Election scenarios", "‘Paralyzed’ market"]}}, "2026-10-12": {"date": "2026-10-12", "morning": {"hook": "사우디공항 피격, 미·러 디젤거래", "markets": [{"name": "S&P 500 지수", "value": "7,811.54", "change": "+0.6%"}, {"name": "나스닥 100 지수", "value": "30,883.15", "change": "+0.5%"}, {"name": "美 국채 10년물 금리", "value": "5.24%", "change": "+0.01"}, {"name": "블룸버그 달러 지수", "value": "1,225.96", "change": "+0.2%"}, {"name": "브렌트 원유 선물", "value": "$104.72", "change": "+0.4%"}], "items": [{"n": 1, "headline": "트럼프-푸틴, 러시아산 디젤 美공급 합의"}, {"n": 2, "headline": "美국채 매도세에 ‘기간 프리미엄’ 급등…장기금리 상승 압력"}, {"n": 3, "headline": "이탈리아보다 위험해진 프랑스 국채"}, {"n": 4, "headline": "EU·중국, 中 하이브리드차 수출 대폭 감축 합의"}, {"n": 5, "headline": "오픈AI, 연말 연환산 매출 700억달러 이상 전망"}]}, "daily": {"headline": "Bank stock vibe shift", "sections": ["Bank stocks try to escape AI scare trade"]}}, "2026-10-15": {"date": "2026-10-15", "morning": {"hook": "美인플레 가속, 반도체 6일째↓", "markets": [{"name": "S&P 500 지수", "value": "7,718.94", "change": "-1.1%"}, {"name": "나스닥 100 지수", "value": "29,950.82", "change": "-2.0%"}, {"name": "美 국채 10년물 금리", "value": "5.19%", "change": "-0.02"}, {"name": "달러-원 환율", "value": "₩1,340.50", "change": "+0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,228.35", "change": "+0.3%"}, {"name": "브렌트 원유 선물", "value": "$106.19", "change": "+0.5%"}], "items": [{"n": 1, "headline": "美 9월 CPI 0.6% 상승…전방위적 물가 압력"}, {"n": 2, "headline": "시장 전문가들, 연준 인상 10월보다 12월에 무게"}, {"n": 3, "headline": "반도체주 6일째 급락…시총 1조달러 넘게 증발"}, {"n": 4, "headline": "코어위브 채권 ‘부실’수준…CEO ‘시장 비이성적’"}, {"n": 5, "headline": "중동·러시아 긴장 고조에 유가 상승"}]}, "daily": {"headline": "Calm no more", "sections": ["Calm shattered", "CoreWeave’s ‘yikes’ moment"]}}, "2026-10-14": {"date": "2026-10-14", "morning": {"hook": "AI균열우려, 구원투수 윌리엄스", "markets": [{"name": "S&P 500 지수", "value": "7,805.45", "change": "-0.0%"}, {"name": "나스닥 100 지수", "value": "30,569.48", "change": "-0.3%"}, {"name": "美 국채 10년물 금리", "value": "5.21%", "change": "-0.03"}, {"name": "달러-원 환율", "value": "₩1,343.12", "change": "+0.1%"}, {"name": "블룸버그 달러 지수", "value": "1,225.19", "change": "-0.2%"}, {"name": "브렌트 원유 선물", "value": "$106.13", "change": "-0.5%"}], "items": [{"n": 1, "headline": "AI 투자 열풍 곳곳서 균열"}, {"n": 2, "headline": "윌리엄스 “올 한차례 추가 인상…내년은 불필요”"}, {"n": 3, "headline": "배스먼 “美20년물 금리 6% 넘으면 악몽”"}, {"n": 4, "headline": "월가 은행 실적…주식 트레이딩 호조·채권은 엇갈려"}, {"n": 5, "headline": "호르무즈 선박 공격 급증...사우디 아람코 본사 피격"}]}, "daily": {"headline": "Beating the pros", "sections": ["Garage trading", "Bond traders dethroned"]}}, "2026-10-13": {"date": "2026-10-13", "morning": {"hook": "美20년물 폐지? 에너지휴전 삐걱", "markets": [{"name": "S&P 500 지수", "value": "7,807.24", "change": "-0.1%"}, {"name": "나스닥 100 지수", "value": "30,664.70", "change": "-0.7%"}, {"name": "달러-원 환율", "value": "₩1,334.80", "change": "+0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,227.38", "change": "+0.1%"}, {"name": "브렌트 원유 선물", "value": "$106.65", "change": "+1.8%"}], "items": [{"n": 1, "headline": "러-우크라 ‘에너지 휴전’ 삐걱·중동 긴장↑…유가불안"}, {"n": 2, "headline": "다시 고개드는 미국채 20년물 폐지론"}, {"n": 3, "headline": "美채권 매도세 끝나나…월가, 듀레이션 매력 주목"}, {"n": 4, "headline": "골드만, 글로벌 주식 단기 전망 ‘비중확대’"}, {"n": 5, "headline": "메타, 새 AI 모델 ‘뮤즈 원더’ 공개"}]}, "daily": {"headline": "AI exposure", "sections": ["Roll of the dice", "Growth shield"]}}, "2026-10-22": {"date": "2026-10-22", "morning": {"hook": "스페이스X 훈풍, 佛10년물 5%", "markets": [{"name": "S&P 500 지수", "value": "7,757.17", "change": "+0.6%"}, {"name": "나스닥 100 지수", "value": "29,822.52", "change": "+1.1%"}, {"name": "美 국채 10년물 금리", "value": "5.12%", "change": "+0.01"}, {"name": "달러-원 환율", "value": "₩1,327.09", "change": "+0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,221.12", "change": "+0.1%"}, {"name": "브렌트 원유 선물", "value": "$109.45", "change": "+0.6%"}], "items": [{"n": 1, "headline": "佛10년물 5% 돌파…독일과 금리차 15년 최대"}, {"n": 2, "headline": "푸틴, 美·우크라와 3자협상 재개 제안…억류 미국인 석방"}, {"n": 3, "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"n": 4, "headline": "고금리가 만든 회사채 기회…블랙록 “한 세대 최고 수익률”"}, {"n": 5, "headline": "미국채 큰손 바뀐다…‘패스트머니’ 영향력 확대"}]}, "daily": {"headline": "No patience for tech", "sections": ["No patience", "Nowhere to hide"]}}, "2026-10-07": {"date": "2026-10-07", "morning": {"hook": "美부채 회의론, AI트레이드 부활", "markets": [{"name": "S&P 500 지수", "value": "7,818.93", "change": "+0.6%"}, {"name": "나스닥 100 지수", "value": "31,224.47", "change": "+0.5%"}, {"name": "美 국채 10년물 금리", "value": "5.28%", "change": "-0.03"}, {"name": "달러-원 환율", "value": "₩1,339.00", "change": "+0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,220.19", "change": "-0.2%"}, {"name": "브렌트 원유 선물", "value": "$101.00", "change": "+0.7%"}], "items": [{"n": 1, "headline": "시장 “美부채, 성장만으론 안돼”…베선트에 회의론"}, {"n": 2, "headline": "佛르펜, 디폴트 경고…ECB 개입 촉구"}, {"n": 3, "headline": "엔비디아, 시총 6조달러 눈앞…주가 사상최고"}, {"n": 4, "headline": "다이먼 “미토스 이후 AI 사이버위험 10배↑”"}, {"n": 5, "headline": "월가 이익 900억달러 돌파 전망…보너스도 사상최대"}]}, "daily": {"headline": "Stocks fight gravity", "sections": ["Stocks versus gravity", "Taiwan’s AI opportunity"]}}, "2026-10-09": {"date": "2026-10-09", "morning": null, "daily": {"headline": "Extinction risk", "sections": ["Pricing AI risk", "China bonds become source of cheap money"]}}, "2026-10-08": {"date": "2026-10-08", "morning": {"hook": "美금리 정점? 스페이스X CDS↑", "markets": [{"name": "S&P 500 지수", "value": "7,801.77", "change": "-0.2%"}, {"name": "나스닥 100 지수", "value": "31,160.08", "change": "-0.2%"}, {"name": "美 국채 10년물 금리", "value": "5.28%", "change": "+0.00"}, {"name": "달러-원 환율", "value": "₩1,339.50", "change": "+0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,223.81", "change": "+0.3%"}, {"name": "브렌트 원유 선물", "value": "$101.32", "change": "+0.7%"}], "items": [{"n": 1, "headline": "美국채 금리 정점 왔나…월가 전망 엇갈려"}, {"n": 2, "headline": "연준 의사록, 9월 금리인상에 매파적 공감대"}, {"n": 3, "headline": "스페이스X, 400억달러 조달 추진에 신용위험↑"}, {"n": 4, "headline": "佛혼란에 ECB 압박…물랭 총재엔 ‘반역’ 위협"}, {"n": 5, "headline": "EU, 中 하이브리드차 수입 제한 추진"}]}, "daily": {"headline": "France as the stress bellwether", "sections": ["France, the stress bellwether", "Trying to call the top"]}}, "2026-10-06": {"date": "2026-10-06", "morning": {"hook": "‘美 부채의 덫’ 경고, 유럽 불안", "markets": [{"name": "S&P 500 지수", "value": "7,773.95", "change": "+0.7%"}, {"name": "나스닥 100 지수", "value": "31,076.44", "change": "+0.9%"}, {"name": "美 국채 10년물 금리", "value": "5.30%", "change": "+0.03"}, {"name": "달러-원 환율", "value": "₩1,341.06", "change": "-0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,216.04", "change": "+0.3%"}, {"name": "브렌트 원유 선물", "value": "$100.32", "change": "-1.9%"}], "items": [{"n": 1, "headline": "佛재정·스페인 정치불안에 유로화도 매도세"}, {"n": 2, "headline": "BMO ‘부채의 덫’ 경고...美30년물 이르면 이달 6%"}, {"n": 3, "headline": "美서비스업 확장세 둔화…가격지수 4년래 최고"}, {"n": 4, "headline": "사우디아람코 “글로벌 원유 비축량 놀랄 만큼 부족”"}, {"n": 5, "headline": "트럼프, 디젤값 잡기…면세유 규제 완화"}]}, "daily": {"headline": "Nvidia nears $6 trillion", "sections": ["Nvidia is back", "‘A very difficult dynamic’"]}}, "2026-10-01": {"date": "2026-10-01", "morning": {"hook": "美10년물 8% 경고, PCE물가 안도", "markets": [{"name": "S&P 500 지수", "value": "7,651.54", "change": "-0.3%"}, {"name": "나스닥 100 지수", "value": "30,408.50", "change": "+0.2%"}, {"name": "美 국채 10년물 금리", "value": "5.28%", "change": "+0.05"}, {"name": "달러-원 환율", "value": "₩1,357.50", "change": "-0.0%"}, {"name": "블룸버그 달러 지수", "value": "1,219.60", "change": "+0.1%"}, {"name": "브렌트 원유 선물", "value": "$103.53", "change": "+0.9%"}], "items": [{"n": 1, "headline": "美 근원 PCE 물가상승률 예상 하회...실질소비 0.6%↑"}, {"n": 2, "headline": "TS롬바르드 ‘美10년물 8% 간다’...골드만 ‘연준 추가 인상 12월’"}, {"n": 3, "headline": "美모기지금리 7.3%…거의 3년 만에 최고"}, {"n": 4, "headline": "BOE “길트시장 충격 전이 위험 커져”"}, {"n": 5, "headline": "연준, 은행 스트레스테스트 개편 확정"}]}, "daily": {"headline": "Relentless bond pressure", "sections": ["Relentless rise in yields", "Political risk in France"]}}}, "windows": {"week": {"label": "10/17–10/23", "themes": [{"name": "반도체 · AI", "days": 5, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "블랙스톤 “AI 버블 아냐…수요 폭발적”"}, {"date": "2026-10-23", "series": "아침", "headline": "中규제·AI우려에 알리바바↓…홍콩 기술주 투매"}, {"date": "2026-10-23", "series": "아침", "headline": "바클레이스, AI 활용해 5천명 감원"}, {"date": "2026-10-22", "series": "아침", "headline": "스페이스X 훈풍, 佛10년물 5%"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 옥석가리기, 佛증시 ‘최대숏’"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 옥석가리기…IPO·주가 ‘휘청’"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 열풍에 헤지펀드 대출 수요 폭증…바클레이스 자본 재배분"}, {"date": "2026-10-21", "series": "데일리", "headline": "SpaceX-Tesla talk gets real"}, {"date": "2026-10-20", "series": "아침", "headline": "반도체 반등, 프랑스 국채불안"}, {"date": "2026-10-20", "series": "아침", "headline": "JP모간 “코어위브 부채 우려 과도”"}, {"date": "2026-10-20", "series": "아침", "headline": "머스크, 美 어린이에 스페이스X 주식 1주씩"}, {"date": "2026-10-20", "series": "데일리", "headline": "AI bellwether in freefall"}, {"date": "2026-10-19", "series": "아침", "headline": "코어위브發 AI불안, 유가 110불"}, {"date": "2026-10-19", "series": "아침", "headline": "코어위브 불안…AI 투자 놓고 공포와 낙관론 충돌"}, {"date": "2026-10-19", "series": "아침", "headline": "中, AI 수출통제 추진"}]}, {"name": "유럽", "days": 5, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "나스닥 급락, 佛불안 전이조짐"}, {"date": "2026-10-23", "series": "아침", "headline": "佛국채 불안 확산…伊로 전이 조짐"}, {"date": "2026-10-22", "series": "아침", "headline": "스페이스X 훈풍, 佛10년물 5%"}, {"date": "2026-10-22", "series": "아침", "headline": "佛10년물 5% 돌파…독일과 금리차 15년 최대"}, {"date": "2026-10-22", "series": "아침", "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 옥석가리기, 佛증시 ‘최대숏’"}, {"date": "2026-10-21", "series": "아침", "headline": "佛 정치·재정 불안에 자산기피…CAC40 ‘최대 숏’"}, {"date": "2026-10-21", "series": "아침", "headline": "프랭클린템플턴 ‘유로존 부채위기 2.0’ 경고"}, {"date": "2026-10-20", "series": "아침", "headline": "반도체 반등, 프랑스 국채불안"}, {"date": "2026-10-20", "series": "아침", "headline": "프랑스 시위에 국채 불안 재점화"}, {"date": "2026-10-20", "series": "아침", "headline": "메르츠 “유럽, 러시아 위협 과소평가”"}, {"date": "2026-10-19", "series": "데일리", "headline": "France besieged"}]}, {"name": "금리 · 국채", "days": 4, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "佛국채 불안 확산…伊로 전이 조짐"}, {"date": "2026-10-22", "series": "아침", "headline": "스페이스X 훈풍, 佛10년물 5%"}, {"date": "2026-10-22", "series": "아침", "headline": "佛10년물 5% 돌파…독일과 금리차 15년 최대"}, {"date": "2026-10-22", "series": "아침", "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"date": "2026-10-22", "series": "아침", "headline": "고금리가 만든 회사채 기회…블랙록 “한 세대 최고 수익률”"}, {"date": "2026-10-22", "series": "아침", "headline": "미국채 큰손 바뀐다…‘패스트머니’ 영향력 확대"}, {"date": "2026-10-20", "series": "아침", "headline": "반도체 반등, 프랑스 국채불안"}, {"date": "2026-10-20", "series": "아침", "headline": "프랑스 시위에 국채 불안 재점화"}, {"date": "2026-10-19", "series": "아침", "headline": "美재무부, 국채 입찰 규모 변경 가능성 의견 타진"}]}, {"name": "부채", "days": 3, "hits": [{"date": "2026-10-22", "series": "아침", "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"date": "2026-10-21", "series": "아침", "headline": "프랭클린템플턴 ‘유로존 부채위기 2.0’ 경고"}, {"date": "2026-10-20", "series": "아침", "headline": "JP모간 “코어위브 부채 우려 과도”"}]}, {"name": "중국", "days": 3, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "中규제·AI우려에 알리바바↓…홍콩 기술주 투매"}, {"date": "2026-10-20", "series": "아침", "headline": "美, 연방기관서 中딥시크 사용 금지"}, {"date": "2026-10-19", "series": "아침", "headline": "中, AI 수출통제 추진"}]}, {"name": "유가 · 중동", "days": 2, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "중동 긴장 고조…美외교관 철수·아람코 대피"}, {"date": "2026-10-19", "series": "아침", "headline": "코어위브發 AI불안, 유가 110불"}, {"date": "2026-10-19", "series": "아침", "headline": "브렌트유 110달러…유라시아 ‘확전 가능성 65%’"}]}]}, "month": {"label": "10월", "themes": [{"name": "반도체 · AI", "days": 13, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "블랙스톤 “AI 버블 아냐…수요 폭발적”"}, {"date": "2026-10-23", "series": "아침", "headline": "中규제·AI우려에 알리바바↓…홍콩 기술주 투매"}, {"date": "2026-10-23", "series": "아침", "headline": "바클레이스, AI 활용해 5천명 감원"}, {"date": "2026-10-22", "series": "아침", "headline": "스페이스X 훈풍, 佛10년물 5%"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 옥석가리기, 佛증시 ‘최대숏’"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 옥석가리기…IPO·주가 ‘휘청’"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 열풍에 헤지펀드 대출 수요 폭증…바클레이스 자본 재배분"}, {"date": "2026-10-21", "series": "데일리", "headline": "SpaceX-Tesla talk gets real"}, {"date": "2026-10-20", "series": "아침", "headline": "반도체 반등, 프랑스 국채불안"}, {"date": "2026-10-20", "series": "아침", "headline": "JP모간 “코어위브 부채 우려 과도”"}, {"date": "2026-10-20", "series": "아침", "headline": "머스크, 美 어린이에 스페이스X 주식 1주씩"}, {"date": "2026-10-20", "series": "데일리", "headline": "AI bellwether in freefall"}, {"date": "2026-10-19", "series": "아침", "headline": "코어위브發 AI불안, 유가 110불"}, {"date": "2026-10-19", "series": "아침", "headline": "코어위브 불안…AI 투자 놓고 공포와 낙관론 충돌"}, {"date": "2026-10-19", "series": "아침", "headline": "中, AI 수출통제 추진"}, {"date": "2026-10-15", "series": "아침", "headline": "美인플레 가속, 반도체 6일째↓"}, {"date": "2026-10-15", "series": "아침", "headline": "반도체주 6일째 급락…시총 1조달러 넘게 증발"}, {"date": "2026-10-15", "series": "아침", "headline": "코어위브 채권 ‘부실’수준…CEO ‘시장 비이성적’"}, {"date": "2026-10-15", "series": "데일리", "headline": "CoreWeave’s ‘yikes’ moment"}, {"date": "2026-10-14", "series": "아침", "headline": "AI균열우려, 구원투수 윌리엄스"}, {"date": "2026-10-14", "series": "아침", "headline": "AI 투자 열풍 곳곳서 균열"}, {"date": "2026-10-13", "series": "아침", "headline": "메타, 새 AI 모델 ‘뮤즈 원더’ 공개"}, {"date": "2026-10-13", "series": "데일리", "headline": "AI exposure"}, {"date": "2026-10-12", "series": "아침", "headline": "오픈AI, 연말 연환산 매출 700억달러 이상 전망"}, {"date": "2026-10-12", "series": "데일리", "headline": "Bank stocks try to escape AI scare trade"}, {"date": "2026-10-09", "series": "데일리", "headline": "Pricing AI risk"}, {"date": "2026-10-08", "series": "아침", "headline": "美금리 정점? 스페이스X CDS↑"}, {"date": "2026-10-08", "series": "아침", "headline": "스페이스X, 400억달러 조달 추진에 신용위험↑"}, {"date": "2026-10-07", "series": "아침", "headline": "美부채 회의론, AI트레이드 부활"}, {"date": "2026-10-07", "series": "아침", "headline": "엔비디아, 시총 6조달러 눈앞…주가 사상최고"}, {"date": "2026-10-07", "series": "아침", "headline": "다이먼 “미토스 이후 AI 사이버위험 10배↑”"}, {"date": "2026-10-07", "series": "데일리", "headline": "Taiwan’s AI opportunity"}, {"date": "2026-10-06", "series": "데일리", "headline": "Nvidia nears $6 trillion"}, {"date": "2026-10-06", "series": "데일리", "headline": "Nvidia is back"}]}, {"name": "금리 · 국채", "days": 11, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "佛국채 불안 확산…伊로 전이 조짐"}, {"date": "2026-10-22", "series": "아침", "headline": "스페이스X 훈풍, 佛10년물 5%"}, {"date": "2026-10-22", "series": "아침", "headline": "佛10년물 5% 돌파…독일과 금리차 15년 최대"}, {"date": "2026-10-22", "series": "아침", "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"date": "2026-10-22", "series": "아침", "headline": "고금리가 만든 회사채 기회…블랙록 “한 세대 최고 수익률”"}, {"date": "2026-10-22", "series": "아침", "headline": "미국채 큰손 바뀐다…‘패스트머니’ 영향력 확대"}, {"date": "2026-10-20", "series": "아침", "headline": "반도체 반등, 프랑스 국채불안"}, {"date": "2026-10-20", "series": "아침", "headline": "프랑스 시위에 국채 불안 재점화"}, {"date": "2026-10-19", "series": "아침", "headline": "美재무부, 국채 입찰 규모 변경 가능성 의견 타진"}, {"date": "2026-10-14", "series": "아침", "headline": "배스먼 “美20년물 금리 6% 넘으면 악몽”"}, {"date": "2026-10-14", "series": "데일리", "headline": "Bond traders dethroned"}, {"date": "2026-10-13", "series": "아침", "headline": "美20년물 폐지? 에너지휴전 삐걱"}, {"date": "2026-10-13", "series": "아침", "headline": "다시 고개드는 미국채 20년물 폐지론"}, {"date": "2026-10-13", "series": "아침", "headline": "美채권 매도세 끝나나…월가, 듀레이션 매력 주목"}, {"date": "2026-10-12", "series": "아침", "headline": "美국채 매도세에 ‘기간 프리미엄’ 급등…장기금리 상승 압력"}, {"date": "2026-10-12", "series": "아침", "headline": "이탈리아보다 위험해진 프랑스 국채"}, {"date": "2026-10-08", "series": "아침", "headline": "美금리 정점? 스페이스X CDS↑"}, {"date": "2026-10-08", "series": "아침", "headline": "美국채 금리 정점 왔나…월가 전망 엇갈려"}, {"date": "2026-10-08", "series": "아침", "headline": "연준 의사록, 9월 금리인상에 매파적 공감대"}, {"date": "2026-10-06", "series": "아침", "headline": "BMO ‘부채의 덫’ 경고...美30년물 이르면 이달 6%"}, {"date": "2026-10-02", "series": "아침", "headline": "美국채 반등, 佛재정우려·英6%"}, {"date": "2026-10-02", "series": "아침", "headline": "英30년물 6% 돌파…G7 중 유로존 위기 이후 처음"}, {"date": "2026-10-02", "series": "아침", "headline": "인플레 선제 대응국 채권 주목…호주·독일 선호"}, {"date": "2026-10-01", "series": "아침", "headline": "美10년물 8% 경고, PCE물가 안도"}, {"date": "2026-10-01", "series": "아침", "headline": "TS롬바르드 ‘美10년물 8% 간다’...골드만 ‘연준 추가 인상 12월’"}, {"date": "2026-10-01", "series": "아침", "headline": "美모기지금리 7.3%…거의 3년 만에 최고"}, {"date": "2026-10-01", "series": "아침", "headline": "BOE “길트시장 충격 전이 위험 커져”"}, {"date": "2026-10-01", "series": "데일리", "headline": "Relentless bond pressure"}]}, {"name": "유럽", "days": 11, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "나스닥 급락, 佛불안 전이조짐"}, {"date": "2026-10-23", "series": "아침", "headline": "佛국채 불안 확산…伊로 전이 조짐"}, {"date": "2026-10-22", "series": "아침", "headline": "스페이스X 훈풍, 佛10년물 5%"}, {"date": "2026-10-22", "series": "아침", "headline": "佛10년물 5% 돌파…독일과 금리차 15년 최대"}, {"date": "2026-10-22", "series": "아침", "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"date": "2026-10-21", "series": "아침", "headline": "AI 옥석가리기, 佛증시 ‘최대숏’"}, {"date": "2026-10-21", "series": "아침", "headline": "佛 정치·재정 불안에 자산기피…CAC40 ‘최대 숏’"}, {"date": "2026-10-21", "series": "아침", "headline": "프랭클린템플턴 ‘유로존 부채위기 2.0’ 경고"}, {"date": "2026-10-20", "series": "아침", "headline": "반도체 반등, 프랑스 국채불안"}, {"date": "2026-10-20", "series": "아침", "headline": "프랑스 시위에 국채 불안 재점화"}, {"date": "2026-10-20", "series": "아침", "headline": "메르츠 “유럽, 러시아 위협 과소평가”"}, {"date": "2026-10-19", "series": "데일리", "headline": "France besieged"}, {"date": "2026-10-12", "series": "아침", "headline": "이탈리아보다 위험해진 프랑스 국채"}, {"date": "2026-10-08", "series": "아침", "headline": "佛혼란에 ECB 압박…물랭 총재엔 ‘반역’ 위협"}, {"date": "2026-10-08", "series": "데일리", "headline": "France as the stress bellwether"}, {"date": "2026-10-08", "series": "데일리", "headline": "France, the stress bellwether"}, {"date": "2026-10-07", "series": "아침", "headline": "佛르펜, 디폴트 경고…ECB 개입 촉구"}, {"date": "2026-10-06", "series": "아침", "headline": "‘美 부채의 덫’ 경고, 유럽 불안"}, {"date": "2026-10-06", "series": "아침", "headline": "佛재정·스페인 정치불안에 유로화도 매도세"}, {"date": "2026-10-02", "series": "아침", "headline": "美국채 반등, 佛재정우려·英6%"}, {"date": "2026-10-02", "series": "아침", "headline": "英30년물 6% 돌파…G7 중 유로존 위기 이후 처음"}, {"date": "2026-10-02", "series": "데일리", "headline": "France’s crisis"}, {"date": "2026-10-01", "series": "데일리", "headline": "Political risk in France"}]}, {"name": "유가 · 중동", "days": 7, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "중동 긴장 고조…美외교관 철수·아람코 대피"}, {"date": "2026-10-19", "series": "아침", "headline": "코어위브發 AI불안, 유가 110불"}, {"date": "2026-10-19", "series": "아침", "headline": "브렌트유 110달러…유라시아 ‘확전 가능성 65%’"}, {"date": "2026-10-15", "series": "아침", "headline": "중동·러시아 긴장 고조에 유가 상승"}, {"date": "2026-10-14", "series": "아침", "headline": "호르무즈 선박 공격 급증...사우디 아람코 본사 피격"}, {"date": "2026-10-13", "series": "아침", "headline": "러-우크라 ‘에너지 휴전’ 삐걱·중동 긴장↑…유가불안"}, {"date": "2026-10-12", "series": "아침", "headline": "사우디공항 피격, 미·러 디젤거래"}, {"date": "2026-10-12", "series": "아침", "headline": "트럼프-푸틴, 러시아산 디젤 美공급 합의"}, {"date": "2026-10-06", "series": "아침", "headline": "사우디아람코 “글로벌 원유 비축량 놀랄 만큼 부족”"}, {"date": "2026-10-06", "series": "아침", "headline": "트럼프, 디젤값 잡기…면세유 규제 완화"}]}, {"name": "부채", "days": 5, "hits": [{"date": "2026-10-22", "series": "아침", "headline": "금리 급등에 美·유럽 부채발행 줄줄이 연기…신용시장 냉각"}, {"date": "2026-10-21", "series": "아침", "headline": "프랭클린템플턴 ‘유로존 부채위기 2.0’ 경고"}, {"date": "2026-10-20", "series": "아침", "headline": "JP모간 “코어위브 부채 우려 과도”"}, {"date": "2026-10-07", "series": "아침", "headline": "美부채 회의론, AI트레이드 부활"}, {"date": "2026-10-07", "series": "아침", "headline": "시장 “美부채, 성장만으론 안돼”…베선트에 회의론"}, {"date": "2026-10-06", "series": "아침", "headline": "‘美 부채의 덫’ 경고, 유럽 불안"}, {"date": "2026-10-06", "series": "아침", "headline": "BMO ‘부채의 덫’ 경고...美30년물 이르면 이달 6%"}]}, {"name": "중국", "days": 5, "hits": [{"date": "2026-10-23", "series": "아침", "headline": "中규제·AI우려에 알리바바↓…홍콩 기술주 투매"}, {"date": "2026-10-20", "series": "아침", "headline": "美, 연방기관서 中딥시크 사용 금지"}, {"date": "2026-10-19", "series": "아침", "headline": "中, AI 수출통제 추진"}, {"date": "2026-10-12", "series": "아침", "headline": "EU·중국, 中 하이브리드차 수출 대폭 감축 합의"}, {"date": "2026-10-08", "series": "아침", "headline": "EU, 中 하이브리드차 수입 제한 추진"}]}, {"name": "물가 · 연준", "days": 4, "hits": [{"date": "2026-10-15", "series": "아침", "headline": "美인플레 가속, 반도체 6일째↓"}, {"date": "2026-10-15", "series": "아침", "headline": "美 9월 CPI 0.6% 상승…전방위적 물가 압력"}, {"date": "2026-10-15", "series": "아침", "headline": "시장 전문가들, 연준 인상 10월보다 12월에 무게"}, {"date": "2026-10-08", "series": "아침", "headline": "연준 의사록, 9월 금리인상에 매파적 공감대"}, {"date": "2026-10-02", "series": "아침", "headline": "연준부의장 “시간 필요”...카시카리 “물가안정은 연준 임무”"}, {"date": "2026-10-02", "series": "아침", "headline": "인플레 선제 대응국 채권 주목…호주·독일 선호"}, {"date": "2026-10-01", "series": "아침", "headline": "美10년물 8% 경고, PCE물가 안도"}, {"date": "2026-10-01", "series": "아침", "headline": "美 근원 PCE 물가상승률 예상 하회...실질소비 0.6%↑"}, {"date": "2026-10-01", "series": "아침", "headline": "TS롬바르드 ‘美10년물 8% 간다’...골드만 ‘연준 추가 인상 12월’"}, {"date": "2026-10-01", "series": "아침", "headline": "연준, 은행 스트레스테스트 개편 확정"}]}]}}, "weekdays": {"2026-10-23": "금", "2026-10-22": "목", "2026-10-21": "수", "2026-10-20": "화", "2026-10-19": "월", "2026-10-16": "금", "2026-10-15": "목", "2026-10-14": "수", "2026-10-13": "화", "2026-10-12": "월", "2026-10-09": "금", "2026-10-08": "목", "2026-10-07": "수", "2026-10-06": "화", "2026-10-05": "월", "2026-10-02": "금", "2026-10-01": "목"}};
+
+    const datesEl = document.querySelector("#dates");
+    const hookEl = document.querySelector("#hook");
+    const marketsEl = document.querySelector("#markets");
+    const morningEl = document.querySelector("#morning");
+    const dailyEl = document.querySelector("#daily");
+    const themeList = document.querySelector("#theme-list");
+    const viewDay = document.querySelector("#view-day");
+    const viewThemes = document.querySelector("#view-themes");
+    let selected = DATA.dates.find((day) => DATA.days[day].morning) || DATA.dates[0];
+    let windowKey = "week";
+
+    function tone(change) {
+      const value = String(change || "").trim();
+      if (value.startsWith("+") && !value.startsWith("+0.0")) return "up";
+      if (value.startsWith("-") || value.startsWith("−")) return "down";
+      return "flat";
+    }
+
+    function shortDate(day) {
+      const [, month, date] = day.split("-");
+      return `${Number(month)}/${Number(date)}`;
+    }
+
+    function renderDates() {
+      datesEl.innerHTML = DATA.dates.map((day) => `
+        <button type="button" data-date="${day}" aria-selected="${day === selected}">
+          <span class="d">${shortDate(day)}</span>
+          <span class="w">${DATA.weekdays[day]}</span>
+        </button>
+      `).join("");
+    }
+
+    function renderDay() {
+      const day = DATA.days[selected];
+      const morning = day.morning;
+      const daily = day.daily;
+      hookEl.textContent = (morning && morning.hook) || (daily && daily.headline) || "이 날의 레터";
+      const markets = (morning && morning.markets) || [];
+      marketsEl.innerHTML = markets.map((row) => `
+        <article class="market">
+          <div class="name">${row.name}</div>
+          <div class="value"><strong>${row.value}</strong><span class="${tone(row.change)}">${row.change}</span></div>
+        </article>
+      `).join("");
+      const items = (morning && morning.items) || [];
+      morningEl.innerHTML = items.length
+        ? items.map((item) => `<li><span class="num">${item.n}</span><span>${item.headline}</span></li>`).join("")
+        : `<p class="empty">이 날은 오늘 아침 5가지가 없습니다.</p>`;
+      const sections = (daily && daily.sections) || [];
+      const title = daily && daily.headline ? `<li><span class="series">제목</span><span>${daily.headline}</span></li>` : "";
+      dailyEl.innerHTML = daily
+        ? title + sections.map((heading) => `<li><span class="series"></span><span>${heading}</span></li>`).join("")
+        : `<p class="empty">이 날은 Markets Daily가 없습니다.</p>`;
+    }
+
+    function renderThemes() {
+      const windowData = DATA.windows[windowKey];
+      document.querySelector("#win-week").textContent = DATA.windows.week.label;
+      document.querySelector("#win-month").textContent = DATA.windows.month.label;
+      document.querySelector("#win-week").setAttribute("aria-selected", windowKey === "week");
+      document.querySelector("#win-month").setAttribute("aria-selected", windowKey === "month");
+      const themes = windowData.themes;
+      themeList.innerHTML = themes.length ? themes.map((theme, index) => `
+        <button class="theme" type="button" aria-expanded="${index === 0}" data-theme="${index}">
+          <div class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></div>
+          <ul class="hits">
+            ${theme.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
+          </ul>
+        </button>
+      `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
+    }
+
+    datesEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-date]");
+      if (!button) return;
+      selected = button.dataset.date;
+      renderDates();
+      renderDay();
+    });
+
+    document.querySelector("#tab-day").addEventListener("click", () => {
+      viewDay.hidden = false;
+      viewThemes.hidden = true;
+      document.querySelector("#tab-day").setAttribute("aria-selected", "true");
+      document.querySelector("#tab-themes").setAttribute("aria-selected", "false");
+      document.querySelector("h1").textContent = "그날의 레터";
+    });
+    document.querySelector("#tab-themes").addEventListener("click", () => {
+      viewDay.hidden = true;
+      viewThemes.hidden = false;
+      document.querySelector("#tab-day").setAttribute("aria-selected", "false");
+      document.querySelector("#tab-themes").setAttribute("aria-selected", "true");
+      document.querySelector("h1").textContent = "반복된 이야기";
+      renderThemes();
+    });
+    document.querySelector(".windows").addEventListener("click", (event) => {
+      const button = event.target.closest("button");
+      if (!button) return;
+      windowKey = button.id === "win-month" ? "month" : "week";
+      renderThemes();
+    });
+    themeList.addEventListener("click", (event) => {
+      const theme = event.target.closest(".theme");
+      if (!theme) return;
+      theme.setAttribute("aria-expanded", theme.getAttribute("aria-expanded") !== "true");
+    });
+
+    renderDates();
+    renderDay();
+    renderThemes();
+  </script>
+</body>
+</html>
