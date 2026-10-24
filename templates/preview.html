@@ -266,7 +266,11 @@
     .theme-head strong { font-size: 18px; letter-spacing: -0.03em; }
     .count { color: var(--muted); font-size: 13px; }
     .hits { display: none; margin: 12px 0 0; padding: 0; list-style: none; }
-    .theme[aria-expanded="true"] .hits { display: block; }
+    .narrative { display: none; margin: 12px 0 0; font-size: 17px; line-height: 1.55; letter-spacing: -0.02em; }
+    .narrative p { margin: 0 0 12px; }
+    .narrative p:last-child { margin-bottom: 0; }
+    .theme[aria-expanded="true"] .hits,
+    .theme[aria-expanded="true"] .narrative { display: block; }
     .hits li {
       display: grid;
       grid-template-columns: 52px 52px 1fr;
@@ -309,7 +313,7 @@
       .market .value span { display: block; margin-top: 2px; font-size: 13px; }
       .market strong { font-size: 17px; }
       ol li, .stories li { font-size: 16px; padding: 13px 0; }
-      #morning .fold, #morning .summary, #commentary .fold, #commentary .summary { font-size: 16px; }
+      #morning .fold, #morning .summary, #commentary .fold, #commentary .summary, .narrative { font-size: 16px; }
       .hits li { display: block; padding: 10px 0; }
       .hits li span:nth-child(1),
       .hits li span:nth-child(2) { display: inline; }
@@ -495,9 +499,11 @@
       document.querySelector("#win-week").setAttribute("aria-selected", windowKey === "week");
       document.querySelector("#win-month").setAttribute("aria-selected", windowKey === "month");
       const themes = windowData.themes;
+      const openAt = Math.max(0, themes.findIndex((theme) => theme.narrative));
       themeList.innerHTML = themes.length ? themes.map((theme, index) => `
-        <button class="theme" type="button" aria-expanded="${index === 0}" data-theme="${index}">
+        <button class="theme" type="button" aria-expanded="${index === openAt}" data-theme="${index}">
           <div class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></div>
+          ${theme.narrative ? `<div class="narrative">${theme.narrative.split(/\n\n/).map((part) => `<p>${esc(part)}</p>`).join("")}</div>` : ""}
           <ul class="hits">
             ${theme.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
           </ul>

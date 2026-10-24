@@ -163,6 +163,36 @@ def _headlines(day: dict) -> list[tuple[str, str]]:
     return rows
 
 
+def narrative_for(name: str, start: date, end: date) -> str:
+    """Written for one theme and one window. A shifted window gets no stale paragraph."""
+    return NARRATIVES.get((name, start, end), "")
+
+
+NARRATIVES = {
+    ("반도체 · AI", date(2026, 10, 17), date(2026, 10, 23)): (
+        "코어위브 신용 불안이 이번 주 AI 거래를 흔들었다. "
+        "19일 그 부채 우려와 중국의 AI 수출통제가 겹쳤고, 20일 JP모간은 우려가 과도하다고 했으며 반도체는 반등했다. "
+        "21일 이후에는 옥석 가리기로 넘어가 IPO와 주가가 흔들렸고, 스페이스X 조달이 훈풍으로 붙었다. "
+        "23일 블랙스톤은 수요가 폭발적이라 버블이 아니라고 했다. "
+        "같은 날 홍콩 기술주는 중국 규제와 AI 우려로 팔렸다."
+    ),
+    ("반도체 · AI", date(2026, 10, 1), date(2026, 10, 23)): (
+        "10월 반도체·AI는 엔비디아 고점에서 출발해 신용 불안으로 꺾였고, 월말에는 버블 논쟁으로 남았다.\n\n"
+        "초반에는 엔비디아가 시가총액 6조 달러에 다가서며 거래가 다시 힘을 얻었다. "
+        "오픈AI는 연말 연환산 매출이 700억 달러를 넘을 것으로 봤고, 메타는 새 모델을 공개했다. "
+        "스페이스X의 400억 달러 조달 추진은 같은 열기 속에서 신용위험을 키웠다. "
+        "이어서 시장은 AI 위험을 가격에 넣기 시작했고, 은행주는 그 공포에서 벗어나려 했다.\n\n"
+        "중반에 급락이 왔다. "
+        "반도체주는 엿새째 내리며 시가총액이 1조 달러 넘게 줄었고, 코어위브 채권은 부실 수준까지 밀렸다. "
+        "회사 쪽은 시장이 비이성적이라고 했고, AI 균열을 막을 구원투수로 윌리엄스가 거론됐다.\n\n"
+        "마지막 주에는 반등과 선별이 같이 왔다. "
+        "JP모간은 코어위브 부채 우려가 과도하다고 했고 반도체는 반등했지만, IPO와 주가는 흔들렸다. "
+        "23일 블랙스톤은 수요가 폭발적이라 버블이 아니라고 했다. "
+        "같은 날 홍콩 기술주는 중국 규제와 AI 우려로 투매됐다."
+    ),
+}
+
+
 def themes_for(days: dict[str, dict], start: date, end: date) -> list[dict]:
     grouped: dict[str, list[dict]] = {name: [] for name, _ in THEMES}
     seen: dict[str, set[tuple[str, str]]] = {name: set() for name, _ in THEMES}
@@ -189,6 +219,7 @@ def themes_for(days: dict[str, dict], start: date, end: date) -> list[dict]:
             {
                 "name": name,
                 "days": len(distinct),
+                "narrative": narrative_for(name, start, end),
                 "hits": sorted(hits, key=lambda hit: hit["date"], reverse=True),
             }
         )

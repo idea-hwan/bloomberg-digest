@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.preview import commentary_summary, daily_view, first_sentence, market_label, recent_dates, summarize, themes_for
+from app.preview import commentary_summary, daily_view, first_sentence, market_label, narrative_for, recent_dates, summarize, themes_for
 
 def test_commentary_summary_stops_near_ten_lines():
     paragraphs = ["A" * 400, "B" * 400, "C" * 400]
@@ -46,6 +46,16 @@ def test_new_layout_starts_on_oct_23_and_keeps_older_days():
 def test_day_list_keeps_only_the_latest_month():
     dates = ["2026-10-24", "2026-09-24", "2026-09-23", "2026-08-01"]
     assert recent_dates(dates, date(2026, 10, 24)) == ["2026-10-24", "2026-09-24"]
+
+
+def test_ai_narrative_matches_only_its_window():
+    week = narrative_for("반도체 · AI", date(2026, 10, 17), date(2026, 10, 23))
+    month = narrative_for("반도체 · AI", date(2026, 10, 1), date(2026, 10, 23))
+    assert "코어위브" in week
+    assert "엔비디아" in month
+    assert len(month) > len(week)
+    assert narrative_for("반도체 · AI", date(2026, 10, 20), date(2026, 10, 26)) == ""
+    assert narrative_for("유럽", date(2026, 10, 1), date(2026, 10, 23)) == ""
 
 
 def test_themes_group_repeated_headlines_and_skip_one_offs():
