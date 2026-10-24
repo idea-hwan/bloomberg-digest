@@ -48,21 +48,20 @@ def test_day_list_keeps_only_the_latest_month():
     assert recent_dates(dates, date(2026, 10, 24)) == ["2026-10-24", "2026-09-24"]
 
 
-def test_ai_review_follows_the_days_still_in_the_window():
-    week = narrative_for("반도체 · AI", [{"date": "2026-10-19"}, {"date": "2026-10-23"}])
-    assert "코어위브" in week and "블랙스톤" in week
+def test_reviews_follow_the_days_still_in_the_window():
+    week = narrative_for("Tech", [{"date": "2026-10-19"}, {"date": "2026-10-20"}, {"date": "2026-10-23"}])
+    assert week.startswith("전환.")
+    assert "코어위브" in week and "블랙스톤" in week and "내렸다" in week
     assert "엔비디아" not in week
-    shifted = narrative_for("반도체 · AI", [{"date": "2026-10-23"}])
+    shifted = narrative_for("Tech", [{"date": "2026-10-23"}])
+    assert shifted.startswith("약세.")
     assert "코어위브" not in shifted and "블랙스톤" in shifted
-    month = narrative_for(
-        "반도체 · AI",
-        [{"date": "2026-10-07"}, {"date": "2026-10-15"}, {"date": "2026-10-23"}],
-    )
+    month = narrative_for("Tech", [{"date": "2026-10-07"}, {"date": "2026-10-15"}, {"date": "2026-10-23"}])
     assert "엔비디아" in month and "부실" in month and "블랙스톤" in month
-    assert narrative_for("유럽", [{"date": "2026-10-23"}]) == ""
+    assert narrative_for("Macro", []) == "변화없음."
 
 
-def test_themes_group_repeated_headlines_and_skip_one_offs():
+def test_themes_stay_on_three_lanes():
     days = {
         "2026-10-14": {
             "morning": {"hook": "AI 균열", "items": [{"headline": "반도체주 급락"}], "markets": []},
@@ -74,12 +73,11 @@ def test_themes_group_repeated_headlines_and_skip_one_offs():
         },
         "2026-10-16": {
             "morning": None,
-            "daily": {"headline": "A single oil note", "sections": []},
+            "daily": {"headline": "A single oil note", "sections": ["브렌트유가 올랐다"]},
         },
     }
     themes = themes_for(days, date(2026, 10, 12), date(2026, 10, 18))
-    names = [theme["name"] for theme in themes]
-    assert "반도체 · AI" in names
-    chip = next(theme for theme in themes if theme["name"] == "반도체 · AI")
-    assert chip["days"] == 2
-    assert all(theme["days"] >= 2 for theme in themes)
+    assert [theme["name"] for theme in themes] == ["Macro", "Geopolitics", "Tech"]
+    tech = themes[2]
+    assert tech["days"] == 2
+    assert any(hit["cited"] for hit in tech["hits"])

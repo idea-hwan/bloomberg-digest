@@ -291,6 +291,10 @@
       font-size: 15px;
       border-top: 1px solid var(--line);
     }
+    .hits li span:first-child,
+    .hits li span:last-child { color: var(--muted); }
+    .hits li.cited span:first-child,
+    .hits li.cited span:last-child { color: var(--ink); font-weight: 650; }
     footer {
       max-width: 980px;
       margin: 0 auto;
@@ -512,14 +516,13 @@
       document.querySelector("#win-week").setAttribute("aria-selected", windowKey === "week");
       document.querySelector("#win-month").setAttribute("aria-selected", windowKey === "month");
       const themes = windowData.themes;
-      const openAt = Math.max(0, themes.findIndex((theme) => theme.narrative));
-      themeList.innerHTML = themes.length ? themes.map((theme, index) => `
-        <article class="theme" aria-expanded="${index === openAt}">
+      themeList.innerHTML = themes.length ? themes.map((theme) => `
+        <article class="theme" aria-expanded="true">
           <button type="button" class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></button>
           ${theme.narrative ? `<div class="narrative">${theme.narrative.split(/\n\n/).map((part) => `<p>${esc(part)}</p>`).join("")}</div>` : ""}
-          ${theme.narrative ? `<button type="button" class="expand" aria-expanded="false">펼치기</button>` : ""}
+          ${theme.hits.length ? `<button type="button" class="expand" aria-expanded="false">펼치기</button>` : ""}
           <ul class="hits">
-            ${theme.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
+            ${theme.hits.map((hit) => `<li class="${hit.cited ? "cited" : ""}"><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
           </ul>
         </article>
       `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
