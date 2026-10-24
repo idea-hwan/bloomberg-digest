@@ -48,14 +48,18 @@ def test_day_list_keeps_only_the_latest_month():
     assert recent_dates(dates, date(2026, 10, 24)) == ["2026-10-24", "2026-09-24"]
 
 
-def test_ai_narrative_matches_only_its_window():
-    week = narrative_for("반도체 · AI", date(2026, 10, 17), date(2026, 10, 23))
-    month = narrative_for("반도체 · AI", date(2026, 10, 1), date(2026, 10, 23))
-    assert "코어위브" in week
-    assert "엔비디아" in month
-    assert len(month) > len(week)
-    assert narrative_for("반도체 · AI", date(2026, 10, 20), date(2026, 10, 26)) == ""
-    assert narrative_for("유럽", date(2026, 10, 1), date(2026, 10, 23)) == ""
+def test_ai_review_follows_the_days_still_in_the_window():
+    week = narrative_for("반도체 · AI", [{"date": "2026-10-19"}, {"date": "2026-10-23"}])
+    assert "코어위브" in week and "블랙스톤" in week
+    assert "엔비디아" not in week
+    shifted = narrative_for("반도체 · AI", [{"date": "2026-10-23"}])
+    assert "코어위브" not in shifted and "블랙스톤" in shifted
+    month = narrative_for(
+        "반도체 · AI",
+        [{"date": "2026-10-07"}, {"date": "2026-10-15"}, {"date": "2026-10-23"}],
+    )
+    assert "엔비디아" in month and "부실" in month and "블랙스톤" in month
+    assert narrative_for("유럽", [{"date": "2026-10-23"}]) == ""
 
 
 def test_themes_group_repeated_headlines_and_skip_one_offs():
