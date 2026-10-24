@@ -1,6 +1,21 @@
 from datetime import date
 
-from app.preview import recent_dates, themes_for
+from app.preview import daily_view, recent_dates, themes_for
+
+
+def test_new_layout_starts_on_oct_23_and_keeps_older_days():
+    sections = [
+        {"heading": "Five things you need to know", "body": "One.\n\nTwo."},
+        {"heading": "On the move", "body": "movers"},
+        {"heading": "Election scenarios", "body": "essay"},
+        {"heading": "Word from Wall Street", "body": "quote"},
+    ]
+    older = daily_view({"date": "2026-10-22", "headline": "Old", "sections": sections})
+    current = daily_view({"date": "2026-10-23", "headline": "New", "sections": sections})
+    assert "five" not in older
+    assert older["sections"] == ["Election scenarios"]
+    assert current["five"] == ["One.", "Two."]
+    assert current["commentary"] == ["Election scenarios"]
 
 
 def test_day_list_keeps_only_the_latest_month():

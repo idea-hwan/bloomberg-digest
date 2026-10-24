@@ -147,6 +147,8 @@
     }
     ol, .stories { list-style: none; margin: 0; padding: 0; }
     li + li { border-top: 1px solid var(--line); }
+    ol.brief li { font-size: 15px; line-height: 1.5; align-items: start; }
+    .stories li.note { display: block; }
     ol li, .stories li {
       display: grid;
       grid-template-columns: 28px 1fr;
@@ -264,7 +266,15 @@
         <h2>오늘 아침 5가지</h2>
         <ol id="morning"></ol>
       </section>
-      <section>
+      <section id="five-section" hidden>
+        <h2>5 things</h2>
+        <ol class="brief" id="five"></ol>
+      </section>
+      <section id="commentary-section" hidden>
+        <h2>commentary</h2>
+        <ul class="stories" id="commentary"></ul>
+      </section>
+      <section id="daily-section">
         <h2>Markets Daily</h2>
         <ul class="stories" id="daily"></ul>
       </section>
@@ -277,7 +287,7 @@
       <div id="theme-list"></div>
     </div>
   </main>
-  <footer>제목과 시세만 보여 줍니다.</footer>
+  <footer>시세와 그날 목록을 보여 줍니다.</footer>
   <script>
     const DATA = /*__DATA__*/ null;
 
@@ -285,6 +295,11 @@
     const hookEl = document.querySelector("#hook");
     const marketsEl = document.querySelector("#markets");
     const morningEl = document.querySelector("#morning");
+    const fiveSection = document.querySelector("#five-section");
+    const fiveEl = document.querySelector("#five");
+    const commentarySection = document.querySelector("#commentary-section");
+    const commentaryEl = document.querySelector("#commentary");
+    const dailySection = document.querySelector("#daily-section");
     const dailyEl = document.querySelector("#daily");
     const themeList = document.querySelector("#theme-list");
     const viewDay = document.querySelector("#view-day");
@@ -331,11 +346,30 @@
       morningEl.innerHTML = items.length
         ? items.map((item) => `<li><span class="num">${item.n}</span><span>${item.headline}</span></li>`).join("")
         : `<p class="empty">이 날은 오늘 아침 5가지가 없습니다.</p>`;
+      const brief = Boolean(daily && daily.five);
+      fiveSection.hidden = !brief;
+      commentarySection.hidden = !brief;
+      dailySection.hidden = brief;
+      if (brief) {
+        const lines = daily.five;
+        fiveEl.innerHTML = lines.length
+          ? lines.map((line, index) => `<li><span class="num">${index + 1}</span><span>${esc(line)}</span></li>`).join("")
+          : `<p class="empty">이 날은 5 things가 없습니다.</p>`;
+        const notes = daily.commentary || [];
+        commentaryEl.innerHTML = notes.length
+          ? notes.map((heading) => `<li class="note"><span>${esc(heading)}</span></li>`).join("")
+          : `<p class="empty">이 날은 commentary가 없습니다.</p>`;
+        return;
+      }
       const sections = (daily && daily.sections) || [];
-      const title = daily && daily.headline ? `<li><span class="series">제목</span><span>${daily.headline}</span></li>` : "";
+      const title = daily && daily.headline ? `<li><span class="series">제목</span><span>${esc(daily.headline)}</span></li>` : "";
       dailyEl.innerHTML = daily
-        ? title + sections.map((heading) => `<li><span class="series"></span><span>${heading}</span></li>`).join("")
+        ? title + sections.map((heading) => `<li><span class="series"></span><span>${esc(heading)}</span></li>`).join("")
         : `<p class="empty">이 날은 Markets Daily가 없습니다.</p>`;
+    }
+
+    function esc(value) {
+      return String(value || "").replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[ch]));
     }
 
     function renderThemes() {

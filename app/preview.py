@@ -32,6 +32,37 @@ THEMES = (
 
 WEEKDAYS = "월화수목금토일"
 LATIN_ALIAS = re.compile(r"^[a-z0-9]+$")
+LAYOUT_FROM = date(2026, 10, 23)
+
+
+def _skipped(heading: str) -> bool:
+    return heading.casefold().startswith(DAILY_SKIP)
+
+
+def five_lines(body: str) -> list[str]:
+    return [part.strip() for part in (body or "").split("\n\n") if part.strip()]
+
+
+def daily_view(row: dict) -> dict:
+    commentary = [
+        section.get("heading") or ""
+        for section in row.get("sections") or []
+        if section.get("heading") and not _skipped(section.get("heading") or "")
+    ]
+    view = {"headline": row.get("headline") or "", "sections": commentary}
+    if date.fromisoformat(row["date"]) < LAYOUT_FROM:
+        return view
+    five_body = next(
+        (
+            section.get("body") or ""
+            for section in row.get("sections") or []
+            if _skipped(section.get("heading") or "") and (section.get("heading") or "").casefold().startswith("five things")
+        ),
+        "",
+    )
+    view["five"] = five_lines(five_body)
+    view["commentary"] = commentary
+    return view
 
 
 def _load_days() -> dict[str, dict]:
@@ -50,16 +81,7 @@ def _load_days() -> dict[str, dict]:
                 "items": [{"n": item["n"], "headline": item["headline"]} for item in row.get("items") or []],
             }
         elif row["series"] == "markets_daily":
-            sections = []
-            for section in row.get("sections") or []:
-                heading = section.get("heading") or ""
-                if heading.casefold().startswith(DAILY_SKIP):
-                    continue
-                sections.append(heading)
-            day["daily"] = {
-                "headline": row.get("headline") or "",
-                "sections": sections,
-            }
+            day["daily"] = daily_view(row)
     return days
 
 
