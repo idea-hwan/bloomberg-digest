@@ -54,7 +54,7 @@
       display: flex;
       gap: 6px;
     }
-    nav button, .cal button, .windows button, .theme, .fold {
+    nav button, .cal button, .windows button, .theme-head, .expand, .fold {
       font: inherit;
       color: inherit;
       background: transparent;
@@ -263,15 +263,26 @@
       justify-content: space-between;
       gap: 12px;
       align-items: baseline;
+      width: 100%;
+      padding: 0;
     }
     .theme-head strong { font-size: 18px; letter-spacing: -0.03em; }
     .count { color: var(--muted); font-size: 13px; }
-    .hits { display: none; margin: 12px 0 0; padding: 0; list-style: none; }
+    .expand {
+      display: none;
+      margin-top: 12px;
+      padding: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .hits { display: none; margin: 8px 0 0; padding: 0; list-style: none; }
     .narrative { display: none; margin: 12px 0 0; font-size: 17px; line-height: 1.55; letter-spacing: -0.02em; }
     .narrative p { margin: 0 0 12px; }
     .narrative p:last-child { margin-bottom: 0; }
-    .theme[aria-expanded="true"] .hits,
-    .theme[aria-expanded="true"] .narrative { display: block; }
+    .theme[aria-expanded="true"] .narrative,
+    .theme[aria-expanded="true"] .expand { display: block; }
+    .theme[aria-expanded="true"]:not(:has(.narrative)) .hits,
+    .expand[aria-expanded="true"] + .hits { display: block; }
     .hits li {
       display: grid;
       grid-template-columns: 52px 52px 1fr;
@@ -315,6 +326,7 @@
       .market strong { font-size: 17px; }
       ol li, .stories li { font-size: 16px; padding: 13px 0; }
       #morning .fold, #morning .summary, #commentary .fold, #commentary .summary, .narrative { font-size: 16px; }
+      .expand { min-height: 44px; }
       .hits li { display: block; padding: 10px 0; }
       .hits li span:nth-child(1),
       .hits li span:nth-child(2) { display: inline; }
@@ -502,13 +514,14 @@
       const themes = windowData.themes;
       const openAt = Math.max(0, themes.findIndex((theme) => theme.narrative));
       themeList.innerHTML = themes.length ? themes.map((theme, index) => `
-        <button class="theme" type="button" aria-expanded="${index === openAt}" data-theme="${index}">
-          <div class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></div>
+        <article class="theme" aria-expanded="${index === openAt}">
+          <button type="button" class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></button>
           ${theme.narrative ? `<div class="narrative">${theme.narrative.split(/\n\n/).map((part) => `<p>${esc(part)}</p>`).join("")}</div>` : ""}
+          ${theme.narrative ? `<button type="button" class="expand" aria-expanded="false">펼치기</button>` : ""}
           <ul class="hits">
             ${theme.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
           </ul>
-        </button>
+        </article>
       `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
     }
 
@@ -551,9 +564,23 @@
       renderThemes();
     });
     themeList.addEventListener("click", (event) => {
-      const theme = event.target.closest(".theme");
-      if (!theme) return;
-      theme.setAttribute("aria-expanded", theme.getAttribute("aria-expanded") !== "true");
+      const expand = event.target.closest(".expand");
+      if (expand) {
+        const open = expand.getAttribute("aria-expanded") === "true";
+        expand.setAttribute("aria-expanded", open ? "false" : "true");
+        expand.textContent = open ? "펼치기" : "접기";
+        return;
+      }
+      const head = event.target.closest(".theme-head");
+      if (!head) return;
+      const theme = head.closest(".theme");
+      const open = theme.getAttribute("aria-expanded") === "true";
+      theme.setAttribute("aria-expanded", open ? "false" : "true");
+      const list = theme.querySelector(".expand");
+      if (open && list) {
+        list.setAttribute("aria-expanded", "false");
+        list.textContent = "펼치기";
+      }
     });
 
     renderDates();
