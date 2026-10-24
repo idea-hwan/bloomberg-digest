@@ -56,6 +56,17 @@ def commentary_summary(body: str, limit: int = 900) -> str:
     return "\n\n".join(chosen)
 
 
+def first_sentence(text: str) -> str:
+    cleaned = re.sub(r"\s+", " ", text or "").strip()
+    cleaned = re.sub(
+        r"(?<=[가-힣]) (?=(?:까지|에서|으로|에게|와|과|은|는|이|가|을|를|도|로|의)(?:\s|[.]))",
+        "",
+        cleaned,
+    )
+    found = re.search(r".+?다\.", cleaned)
+    return found.group(0) if found else cleaned
+
+
 def summarize(body: str) -> str:
     """The lead paragraph. The rest of the story stays off the page."""
     paragraphs = [re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n", body or "") if part.strip()]
@@ -99,6 +110,7 @@ def _load_days() -> dict[str, dict]:
         if row["series"] == "morning5":
             day["morning"] = {
                 "hook": row.get("hook") or "",
+                "line": first_sentence(row.get("lead") or ""),
                 "markets": row.get("markets") or [],
                 "items": [
                     {

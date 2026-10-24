@@ -108,8 +108,14 @@
       font-size: 34px;
       line-height: 1.25;
       letter-spacing: -0.04em;
-      margin: 0 0 18px;
+      margin: 0 0 8px;
       font-weight: 750;
+    }
+    .dek {
+      margin: 0 0 18px;
+      font-size: 18px;
+      line-height: 1.5;
+      letter-spacing: -0.02em;
     }
     .markets {
       display: grid;
@@ -267,6 +273,7 @@
       main { padding-top: 16px; padding-bottom: 40px; }
       .dates button { min-height: 52px; }
       .hook { font-size: 26px; line-height: 1.32; }
+      .dek { font-size: 16px; }
       .markets { grid-template-columns: 1fr 1fr; gap: 8px; }
       .market { padding: 12px; }
       .market .value { display: block; }
@@ -298,6 +305,7 @@
     <div id="view-day">
       <div class="dates" id="dates"></div>
       <h2 class="hook" id="hook"></h2>
+      <p class="dek" id="dek" hidden></p>
       <div class="markets" id="markets"></div>
       <section>
         <h2>오늘 아침 5가지</h2>
@@ -330,6 +338,7 @@
 
     const datesEl = document.querySelector("#dates");
     const hookEl = document.querySelector("#hook");
+    const dekEl = document.querySelector("#dek");
     const marketsEl = document.querySelector("#markets");
     const morningEl = document.querySelector("#morning");
     const fiveSection = document.querySelector("#five-section");
@@ -372,6 +381,9 @@
       const morning = day.morning;
       const daily = day.daily;
       hookEl.textContent = (morning && morning.hook) || (daily && daily.headline) || "이 날의 레터";
+      const line = (morning && morning.line) || "";
+      dekEl.hidden = !line;
+      dekEl.textContent = line;
       const markets = (morning && morning.markets) || [];
       marketsEl.innerHTML = markets.map((row) => `
         <article class="market">

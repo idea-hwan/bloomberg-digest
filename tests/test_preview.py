@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.preview import commentary_summary, daily_view, recent_dates, summarize, themes_for
+from app.preview import commentary_summary, daily_view, first_sentence, recent_dates, summarize, themes_for
 
 def test_commentary_summary_stops_near_ten_lines():
     paragraphs = ["A" * 400, "B" * 400, "C" * 400]
@@ -8,7 +8,11 @@ def test_commentary_summary_stops_near_ten_lines():
     assert summary == "\n\n".join(paragraphs[:2])
 
 
-def test_morning_summary_keeps_the_lead_and_drops_the_rest():
+def test_day_headline_is_the_first_sentence_of_the_lead():
+    lead = "인공지능 우려와 중동 긴장이 겹치며 뉴욕증시가 급락했다. 나스닥은 2.9% 내렸다.\n\n유가가 올랐다."
+    assert first_sentence(lead) == "인공지능 우려와 중동 긴장이 겹치며 뉴욕증시가 급락했다."
+    spaced = "중동 긴장 까지 고조되면서 뉴욕증시 가 급락했다. 유가는 올랐다."
+    assert first_sentence(spaced) == "중동 긴장까지 고조되면서 뉴욕증시가 급락했다."
     body = "첫 문단이다. 둘째 문장이다.\n\n둘째 문단은 빼야 한다."
     assert summarize(body) == "첫 문단이다. 둘째 문장이다."
 
