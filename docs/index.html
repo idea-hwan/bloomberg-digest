@@ -287,11 +287,11 @@
   <header>
     <div>
       <p class="mark">Bloomberg digest</p>
-      <h1>그날의 레터</h1>
+      <h1>Day</h1>
     </div>
     <nav>
-      <button type="button" id="tab-day" aria-selected="true">그날</button>
-      <button type="button" id="tab-themes" aria-selected="false">반복</button>
+      <button type="button" id="tab-day" aria-selected="true">Day</button>
+      <button type="button" id="tab-themes" aria-selected="false">Themes</button>
     </nav>
   </header>
   <main>
@@ -460,14 +460,14 @@
       viewThemes.hidden = true;
       document.querySelector("#tab-day").setAttribute("aria-selected", "true");
       document.querySelector("#tab-themes").setAttribute("aria-selected", "false");
-      document.querySelector("h1").textContent = "그날의 레터";
+      document.querySelector("h1").textContent = "Day";
     });
     document.querySelector("#tab-themes").addEventListener("click", () => {
       viewDay.hidden = true;
       viewThemes.hidden = false;
       document.querySelector("#tab-day").setAttribute("aria-selected", "false");
       document.querySelector("#tab-themes").setAttribute("aria-selected", "true");
-      document.querySelector("h1").textContent = "반복된 이야기";
+      document.querySelector("h1").textContent = "Themes";
       renderThemes();
     });
     document.querySelector(".windows").addEventListener("click", (event) => {
