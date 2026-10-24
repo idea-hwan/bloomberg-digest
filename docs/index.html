@@ -24,7 +24,10 @@
       color: var(--ink);
       font-family: "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
       line-height: 1.45;
+      overflow-wrap: break-word;
+      -webkit-text-size-adjust: 100%;
     }
+    button { -webkit-tap-highlight-color: transparent; }
     header {
       display: flex;
       justify-content: space-between;
@@ -76,11 +79,16 @@
       display: flex;
       gap: 8px;
       overflow-x: auto;
+      overscroll-behavior-x: contain;
       padding-bottom: 8px;
       margin-bottom: 22px;
+      scroll-snap-type: x proximity;
+      scrollbar-width: none;
     }
+    .dates::-webkit-scrollbar { display: none; }
     .dates button {
       flex: 0 0 auto;
+      scroll-snap-align: start;
       min-width: 72px;
       padding: 8px 10px 9px;
       border-radius: 12px;
@@ -206,9 +214,33 @@
       font-size: 12px;
     }
     @media (max-width: 720px) {
-      .hook { font-size: 28px; }
-      .markets { grid-template-columns: 1fr 1fr; }
-      header { flex-direction: column; align-items: flex-start; }
+      header, main, footer {
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+      }
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 14px;
+        padding-top: max(18px, env(safe-area-inset-top));
+      }
+      h1 { font-size: 26px; }
+      nav button { min-height: 44px; padding: 8px 16px; }
+      main { padding-top: 16px; padding-bottom: 40px; }
+      .dates button { min-height: 52px; }
+      .hook { font-size: 26px; line-height: 1.32; }
+      .markets { grid-template-columns: 1fr 1fr; gap: 8px; }
+      .market { padding: 12px; }
+      .market .value { display: block; }
+      .market .value span { display: block; margin-top: 2px; font-size: 13px; }
+      .market strong { font-size: 17px; }
+      ol li, .stories li { font-size: 16px; padding: 13px 0; }
+      .hits li { display: block; padding: 10px 0; }
+      .hits li span:nth-child(1),
+      .hits li span:nth-child(2) { display: inline; }
+      .hits li span:nth-child(2) { margin-left: 8px; }
+      .hits li span:last-child { display: block; margin-top: 3px; }
+      footer { padding-bottom: calc(24px + env(safe-area-inset-bottom)); }
     }
   </style>
 </head>
@@ -279,6 +311,8 @@
           <span class="w">${DATA.weekdays[day]}</span>
         </button>
       `).join("");
+      const current = datesEl.querySelector('[aria-selected="true"]');
+      if (current) current.scrollIntoView({ inline: "nearest", block: "nearest" });
     }
 
     function renderDay() {
