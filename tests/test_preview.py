@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.preview import commentary_summary, daily_view, first_sentence, market_label, narrative_for, recent_dates, summarize, themes_for
+from app.preview import commentary_summary, daily_view, first_sentence, market_label, narrative_for, recent_dates, summarize, themes_for, week_windows
 
 def test_commentary_summary_stops_near_ten_lines():
     paragraphs = ["A" * 400, "B" * 400, "C" * 400]
@@ -50,15 +50,37 @@ def test_day_list_keeps_only_the_latest_month():
 
 def test_reviews_follow_the_days_still_in_the_window():
     week = narrative_for("Tech", [{"date": "2026-10-19"}, {"date": "2026-10-20"}, {"date": "2026-10-23"}])
-    assert week.startswith("전환.")
-    assert "코어위브" in week and "블랙스톤" in week and "내렸다" in week
-    assert "엔비디아" not in week
+    assert "코어위브" in week and "블랙스톤" in week and "내렸다" in week and "그런데" in week
+    assert "엔비디아" not in week and not week.startswith("전환.")
     shifted = narrative_for("Tech", [{"date": "2026-10-23"}])
-    assert shifted.startswith("약세.")
-    assert "코어위브" not in shifted and "블랙스톤" in shifted
+    assert "블랙스톤" in shifted and "내렸다" in shifted
+    assert "코어위브" not in shifted and not shifted.startswith("약세.")
     month = narrative_for("Tech", [{"date": "2026-10-07"}, {"date": "2026-10-15"}, {"date": "2026-10-23"}])
     assert "엔비디아" in month and "부실" in month and "블랙스톤" in month
     assert narrative_for("Macro", []) == "변화없음."
+    macro = narrative_for("Macro", [
+        {"date": "2026-10-19"},
+        {"date": "2026-10-20"},
+        {"date": "2026-10-21"},
+        {"date": "2026-10-22"},
+        {"date": "2026-10-23"},
+    ])
+    assert "12%" in macro and "1.99조" in macro and "146bp" in macro
+    assert "150bp" in macro and "159.4bp" in macro and "178bp" in macro
+    assert "그리고" in macro and "그래서" in macro
+    shifted = narrative_for("Macro", [{"date": "2026-10-23"}])
+    assert "178bp" in shifted and "146bp" not in shifted
+
+
+def test_each_mail_day_opens_its_own_week():
+    days = {
+        "2026-10-22": {"morning": {"hook": "佛10년물 5%", "items": [], "markets": []}, "daily": None},
+        "2026-10-23": {"morning": {"hook": "나스닥 급락", "items": [{"headline": "佛국채 불안"}], "markets": []}, "daily": None},
+    }
+    weeks = week_windows(days, ["2026-10-23", "2026-10-22"])
+    assert weeks["2026-10-23"]["start"] == "2026-10-17"
+    assert weeks["2026-10-22"]["start"] == "2026-10-16"
+    assert weeks["2026-10-23"]["themes"][0]["name"] == "Macro"
 
 
 def test_themes_stay_on_three_lanes():

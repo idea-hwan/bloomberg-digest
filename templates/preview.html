@@ -54,7 +54,7 @@
       display: flex;
       gap: 6px;
     }
-    nav button, .cal button, .windows button, .theme-head, .expand, .fold {
+    nav button, .cal button, .theme-head, .expand, .fold {
       font: inherit;
       color: inherit;
       background: transparent;
@@ -124,10 +124,13 @@
       font-size: 14px;
       font-weight: 650;
     }
+    .cal-grid button.in { background: var(--chip); }
     .cal-grid button[aria-selected="true"] {
       background: var(--ink);
       color: var(--paper);
     }
+    .weekhead { align-items: flex-start; }
+    .theme-col { flex: 1; min-width: 0; }
     .cal-grid .off { color: #c8c2b6; font-weight: 500; }
     .hook {
       font-size: 32px;
@@ -235,20 +238,6 @@
       color: var(--muted);
       padding: 12px 0 4px;
     }
-    .windows { display: flex; gap: 8px; margin-bottom: 18px; }
-    .windows button {
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--card);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    .windows button[aria-selected="true"] {
-      background: var(--ink);
-      color: var(--paper);
-      border-color: var(--ink);
-    }
     .theme {
       width: 100%;
       text-align: left;
@@ -348,7 +337,7 @@
     </div>
     <nav>
       <button type="button" id="tab-day" aria-selected="true">Day</button>
-      <button type="button" id="tab-themes" aria-selected="false">Themes</button>
+      <button type="button" id="tab-themes" aria-selected="false">Weekly</button>
     </nav>
   </header>
   <main>
@@ -379,11 +368,10 @@
       </section>
     </div>
     <div id="view-themes" hidden>
-      <div class="windows">
-        <button type="button" id="win-week" aria-selected="true"></button>
-        <button type="button" id="win-month" aria-selected="false"></button>
+      <div class="dayhead weekhead">
+        <div class="cal" id="week-dates"></div>
+        <div id="theme-list" class="theme-col"></div>
       </div>
-      <div id="theme-list"></div>
     </div>
   </main>
   <footer>시세와 그날 목록을 보여 줍니다.</footer>
@@ -391,6 +379,7 @@
     const DATA = /*__DATA__*/ null;
 
     const datesEl = document.querySelector("#dates");
+    const weekDatesEl = document.querySelector("#week-dates");
     const hookEl = document.querySelector("#hook");
     const dekEl = document.querySelector("#dek");
     const marketsEl = document.querySelector("#markets");
@@ -405,7 +394,7 @@
     const viewDay = document.querySelector("#view-day");
     const viewThemes = document.querySelector("#view-themes");
     let selected = DATA.dates.find((day) => DATA.days[day].morning) || DATA.dates[0];
-    let windowKey = "week";
+    let weekEnd = DATA.dates[0];
 
     function tone(change) {
       const value = String(change || "").trim();
@@ -419,14 +408,14 @@
       return `${Number(month)}/${Number(date)}`;
     }
 
-    function renderDates() {
+    function renderCalendar(el, selectedDate, rangeStart, rangeEnd) {
       const byMonth = new Map();
       for (const day of DATA.dates) {
         const key = day.slice(0, 7);
         if (!byMonth.has(key)) byMonth.set(key, []);
         byMonth.get(key).push(day);
       }
-      datesEl.innerHTML = [...byMonth.keys()].sort().reverse().map((key) => {
+      el.innerHTML = [...byMonth.keys()].sort().reverse().map((key) => {
         const [year, month] = key.split("-").map(Number);
         const present = new Set(byMonth.get(key));
         const lastDay = Math.max(...[...present].map((day) => Number(day.slice(8))));
@@ -438,8 +427,9 @@
           const dow = new Date(year, month - 1, day).getDay();
           if (dow === 0 || dow === 6) continue;
           const iso = `${key}-${String(day).padStart(2, "0")}`;
+          const inRange = Boolean(rangeStart) && iso >= rangeStart && iso <= rangeEnd && iso !== selectedDate;
           cells.push(present.has(iso)
-            ? `<button type="button" data-date="${iso}" aria-selected="${iso === selected}" aria-label="${month}월 ${day}일">${day}</button>`
+            ? `<button type="button" data-date="${iso}" class="${inRange ? "in" : ""}" aria-selected="${iso === selectedDate}" aria-label="${month}월 ${day}일">${day}</button>`
             : `<span class="off">${day}</span>`);
         }
         return `
@@ -450,6 +440,15 @@
           </section>
         `;
       }).join("");
+    }
+
+    function renderDates() {
+      renderCalendar(datesEl, selected, "", "");
+    }
+
+    function renderWeekDates() {
+      const week = DATA.weeks[weekEnd];
+      renderCalendar(weekDatesEl, weekEnd, week.start, week.end);
     }
 
     function renderDay() {
@@ -510,12 +509,8 @@
     }
 
     function renderThemes() {
-      const windowData = DATA.windows[windowKey];
-      document.querySelector("#win-week").textContent = DATA.windows.week.label;
-      document.querySelector("#win-month").textContent = DATA.windows.month.label;
-      document.querySelector("#win-week").setAttribute("aria-selected", windowKey === "week");
-      document.querySelector("#win-month").setAttribute("aria-selected", windowKey === "month");
-      const themes = windowData.themes;
+      const themes = DATA.weeks[weekEnd].themes;
+      renderWeekDates();
       themeList.innerHTML = themes.length ? themes.map((theme) => `
         <article class="theme" aria-expanded="true">
           <button type="button" class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></button>
@@ -544,6 +539,12 @@
       renderDates();
       renderDay();
     });
+    weekDatesEl.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-date]");
+      if (!button || !DATA.weeks[button.dataset.date]) return;
+      weekEnd = button.dataset.date;
+      renderThemes();
+    });
 
     document.querySelector("#tab-day").addEventListener("click", () => {
       viewDay.hidden = false;
@@ -557,13 +558,7 @@
       viewThemes.hidden = false;
       document.querySelector("#tab-day").setAttribute("aria-selected", "false");
       document.querySelector("#tab-themes").setAttribute("aria-selected", "true");
-      document.querySelector("h1").textContent = "Themes";
-      renderThemes();
-    });
-    document.querySelector(".windows").addEventListener("click", (event) => {
-      const button = event.target.closest("button");
-      if (!button) return;
-      windowKey = button.id === "win-month" ? "month" : "week";
+      document.querySelector("h1").textContent = "Weekly";
       renderThemes();
     });
     themeList.addEventListener("click", (event) => {

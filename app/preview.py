@@ -175,12 +175,6 @@ def _take(dates: set[str], specs: list[tuple]) -> tuple[list[str], list[tuple[st
     return lines, needles
 
 
-def _join(status: str, blocks: list[list[str]]) -> str:
-    parts = [status]
-    parts.extend(" ".join(block) for block in blocks if block)
-    return "\n\n".join(parts)
-
-
 def review(name: str, dates: set[str]) -> tuple[str, list[tuple[str, tuple[str, ...]]]]:
     if name == "Macro":
         return _macro(dates)
@@ -208,94 +202,138 @@ def _macro(dates: set[str]) -> tuple[str, list]:
     parts = []
     if early:
         parts.append(" ".join(early))
-    if late:
-        parts.append(" ".join(late))
+    parts.extend(late)
     return "\n\n".join(parts), early_marks + late_marks
 
 
 def _macro_late(dates: set[str]) -> tuple[list[str], list]:
-    lines: list[str] = []
+    paragraphs: list[str] = []
     marks: list[tuple[str, tuple[str, ...]]] = []
-    if "2026-10-19" in dates and "2026-10-20" in dates:
-        lines.append("미국 재정적자가 1.99조 달러까지 늘고 이자비용이 사상 최대를 기록한 자리에서, 프랑스 시위가 국채 불안을 다시 켰다.")
+    if "2026-10-19" in dates:
+        paragraphs.append(
+            "미국 2026회계연도 재정적자는 전년보다 12% 늘어 1.99조 달러가 됐다. "
+            "4년 연속 2조 달러 안팎이라 국내총생산의 약 6%이고, 순이자비용은 1.05조 달러까지 늘어 사상 최대다."
+        )
         marks.append(("2026-10-19", ("재정적자",)))
-        marks.append(("2026-10-20", ("프랑스 시위",)))
-    elif "2026-10-19" in dates:
-        lines.append("미국 재정적자는 1.99조 달러까지 늘었고, 이자비용은 사상 최대를 기록했다.")
-        marks.append(("2026-10-19", ("재정적자",)))
-    elif "2026-10-20" in dates:
-        lines.append("프랑스 시위 이후 국채 불안이 다시 켜졌다.")
+    france: list[str] = []
+    if "2026-10-20" in dates:
+        france.append(
+            "프랑스에서는 생활비 시위가 커졌고, 프랑스 10년물 금리는 독일 10년물보다 8bp 높아져 146bp까지 벌어졌다. "
+            "CAC40은 장중 1.7% 내렸다."
+        )
         marks.append(("2026-10-20", ("프랑스 시위",)))
     if "2026-10-21" in dates:
-        lines.append("시장은 CAC40를 최대 숏으로 쌓았고, 프랭클린템플턴은 유로존 부채위기 2.0을 경고했다.")
+        france.append(
+            "20일에는 프랑스와 독일의 10년물 금리차가 150bp를 넘겨 마감했다. "
+            "CTA는 바클레이스 집계대로 프랑스 주식을 줄였고, CAC40 숏을 미국과 유럽에서 가장 크게 쌓았다. "
+            "프랭클린템플턴은 프랑스 국채 매도가 유로존 부채위기 2.0으로 번질 수 있다고 경고했다."
+        )
         marks.append(("2026-10-21", ("CAC40", "프랭클린")))
     if "2026-10-22" in dates:
-        lines.append("프랑스 10년물이 5%를 넘자 독일 국채와의 금리차는 15년 만에 가장 넓어졌고, 치솟은 금리에 미국과 유럽의 부채 발행은 뒤로 밀렸다.")
+        also = "도" if dates & {"2026-10-20", "2026-10-21"} else ""
+        france.append(
+            "프랑스 10년물 금리는 2002년 이후 처음 5%를 넘었고, "
+            f"독일 10년물과의 금리차{also} 159.4bp까지 벌어져 15년 만에 가장 넓어졌다. "
+            "그래서 미국 기업과 유럽 기업은 10월 부채 발행을 50억 달러 넘게 미뤘다."
+        )
         marks.append(("2026-10-22", ("5%", "부채발행", "금리 급등")))
     if "2026-10-23" in dates:
-        lines.append("국채 약세는 프랑스에서 이탈리아로 번지는 조짐으로 이어졌다.")
+        further = "더 " if "2026-10-22" in dates else ""
+        france.append(
+            f"금리차는 하루 만에 19bp {further}벌어져 178bp가 됐고, 2011년 말 이후 가장 높은 수준이다. "
+            "그리고 프랑스 국채 약세는 이탈리아 국채로 번지기 시작했고, CAC40도 1% 넘게 내렸다."
+        )
         marks.append(("2026-10-23", ("伊로", "佛국채")))
-    return lines, marks
+    if france:
+        paragraphs.append(" ".join(france))
+    return paragraphs, marks
 
 
 def _geopolitics(dates: set[str]) -> tuple[str, list]:
-    lines, marks = _take(dates, [
-        ({"2026-10-02"}, "미국은 이란 인근에 항모를 추가 배치할 수 있다고 전했다.", [("2026-10-02", ("항모",))]),
-        ({"2026-10-06"}, "사우디아람코는 글로벌 원유 비축이 놀랄 만큼 부족하다고 했다.", [("2026-10-06", ("비축",))]),
-        ({"2026-10-12"}, "사우디 공항이 피격됐다. 트럼프와 푸틴은 러시아산 디젤의 미국 공급에 합의했다.", [("2026-10-12", ("공항", "디젤"))]),
-        ({"2026-10-13"}, "러시아-우크라이나 에너지 휴전이 흔들리고, 중동 긴장과 함께 유가 불안이 나왔다.", [("2026-10-13", ("에너지 휴전",))]),
-        ({"2026-10-14"}, "호르무즈 선박 공격이 늘었고, 사우디아람코 본사가 피격됐다.", [("2026-10-14", ("호르무즈",))]),
-        ({"2026-10-15"}, "중동과 러시아 긴장으로 유가가 올랐다.", [("2026-10-15", ("유가 상승",))]),
-        ({"2026-10-19"}, "브렌트유는 110달러를 기록했다. 유라시아그룹은 확전 가능성을 65%로 제시했다.", [("2026-10-19", ("110",))]),
-        ({"2026-10-20"}, "메르츠는 유럽이 러시아 위협을 과소평가한다고 말했다.", [("2026-10-20", ("메르츠",))]),
-        ({"2026-10-22"}, "푸틴은 미국, 우크라이나와 3자 협상 재개를 제안했고, 억류된 미국인을 석방했다.", [("2026-10-22", ("3자협상",))]),
-        ({"2026-10-23"}, "미국은 중동 주재 외교관을 철수했고, 사우디아람코는 직원을 대피시켰다.", [("2026-10-23", ("아람코 대피", "외교관"))]),
-    ])
-    if not lines:
+    early: list[str] = []
+    late: list[str] = []
+    marks: list[tuple[str, tuple[str, ...]]] = []
+    if "2026-10-02" in dates:
+        early.append("미국은 이란 인근에 항모를 더 보낼 수 있다고 전했고, 트럼프는 중간선거 이후 폭격 재개 가능성도 열어 뒀다.")
+        marks.append(("2026-10-02", ("항모",)))
+    if "2026-10-06" in dates:
+        early.append("아람코는 글로벌 원유 재고가 전쟁 전 100억 배럴에서 60억 배럴 아래로 줄었고, 바로 쓸 수 있는 물량은 약 10%라고 했다.")
+        marks.append(("2026-10-06", ("비축",)))
+    if "2026-10-12" in dates:
+        early.append("사우디 리야드 공항이 피격된 날, 트럼프와 푸틴은 10월 1350만 배럴의 러시아산 디젤을 미국에 공급하기로 했다.")
+        marks.append(("2026-10-12", ("공항", "디젤")))
+    if "2026-10-13" in dates:
+        early.append("러시아와 우크라이나의 에너지 휴전은 흔들렸고, 브렌트유는 장중 2% 넘게 올라 107달러를 넘었다.")
+        marks.append(("2026-10-13", ("에너지 휴전",)))
+    if "2026-10-14" in dates:
+        early.append("이란은 호르무즈 통과 선박 공격을 늘렸고, 사우디아람코 다란 본사는 후티 미사일에 맞았다.")
+        marks.append(("2026-10-14", ("호르무즈",)))
+    if "2026-10-15" in dates:
+        early.append("브렌트유는 106달러를 웃돌았고, 피격된 화물선 한 척은 침몰했다.")
+        marks.append(("2026-10-15", ("유가 상승",)))
+    if "2026-10-19" in dates:
+        late.append("브렌트유는 16일 장중 3.9% 올라 5월 이후 처음 110달러를 찍었다. 올해 유가는 70% 넘게 올랐고, 유럽 디젤 선물은 두 배 넘게 뛰었다. 유라시아그룹은 확전 가능성을 35%에서 65%로 높였다.")
+        marks.append(("2026-10-19", ("110",)))
+    if "2026-10-20" in dates:
+        late.append("메르츠 독일 총리는 유럽이 러시아 위협을 과소평가한다고 말했고, 푸틴이 우크라이나 영토를 넘어 유럽 정치 질서까지 흔들려 한다고 경고했다.")
+        marks.append(("2026-10-20", ("메르츠",)))
+    if "2026-10-22" in dates:
+        late.append("푸틴은 11월 초 미국, 우크라이나와 3자 협상을 제안했고, 억류된 미국인 교사 스티븐 허버드를 석방했다. 우크라이나와 직접 만나겠다는 신호는 아직 없었다.")
+        marks.append(("2026-10-22", ("3자협상",)))
+    if "2026-10-23" in dates:
+        if "2026-10-22" in dates:
+            late.append("그래서 협상 제안은 유가 강세를 되돌리지 못했다.")
+        late.append("미국은 사우디 주재 외교관과 가족에게 철수 명령을 내렸고, 사우디아람코는 다란 본사 경보 뒤 직원을 대피시켰다. 아람코 시설과 사우디 동부 공항 공격으로 최소 4명이 숨졌고, 브렌트유는 장중 4% 넘게 올라 113달러를 넘었다.")
+        marks.append(("2026-10-23", ("아람코 대피", "외교관")))
+    paragraphs = [block for block in (" ".join(early), " ".join(late)) if block]
+    if not paragraphs:
         return "변화없음.", []
-    return _join("강세.", [lines]), marks
+    return "\n\n".join(paragraphs), marks
 
 
 def _tech(dates: set[str]) -> tuple[str, list]:
-    high, high_marks = _take(dates, [
-        ({"2026-10-06", "2026-10-07"}, "엔비디아 시가총액은 6조 달러에 다가섰고, 주가는 사상 최고였다.", [("2026-10-06", ("Nvidia", "6조")), ("2026-10-07", ("6조", "엔비디아"))]),
-        ({"2026-10-08"}, "스페이스X는 400억 달러 조달을 추진했고, 신용위험이 높아졌다.", [("2026-10-08", ("스페이스X", "CDS"))]),
-        ({"2026-10-12"}, "오픈AI는 연말 연환산 매출 700억 달러 이상을 전망했다.", [("2026-10-12", ("오픈AI", "700억"))]),
-        ({"2026-10-13"}, "메타는 새 AI 모델 뮤즈 원더를 공개했다.", [("2026-10-13", ("뮤즈",))]),
-    ])
-    crash, crash_marks = _take(dates, [
-        ({"2026-10-14"}, "AI 투자 열풍에서 균열이 보인다는 진단이 나왔다.", [("2026-10-14", ("균열",))]),
-        ({"2026-10-15"}, "반도체주는 엿새째 내리며 시가총액이 1조 달러 넘게 줄었다. 코어위브 채권은 부실 수준까지 밀렸고, 코어위브 CEO는 시장이 비이성적이라고 했다.", [("2026-10-15", ("6일째", "부실", "yikes"))]),
-    ])
-    late, late_marks = _take(dates, [
-        ({"2026-10-19"}, "코어위브 부채 우려로 AI 거래가 흔들렸다. 중국은 AI 수출통제를 추진했다.", [("2026-10-19", ("코어위브", "수출통제"))]),
-        ({"2026-10-20"}, "JP모간은 코어위브 부채 우려가 과도하다고 했고, 반도체주는 반등했다. 미국은 연방기관의 딥시크 사용을 금지했다.", [("2026-10-20", ("JP모간", "반도체 반등", "딥시크"))]),
-        ({"2026-10-21"}, "IPO와 주가는 옥석 가리기 과정에서 흔들렸다.", [("2026-10-21", ("옥석", "IPO"))]),
-        ({"2026-10-22"}, "스페이스X와 테슬라의 연계 논의가 나오며 스페이스X 조달에 훈풍이 붙었다.", [("2026-10-22", ("스페이스X", "SpaceX"))]),
-        ({"2026-10-23"}, "블랙스톤은 AI 수요가 폭발적이며 버블이 아니라고 했다. 23일 나스닥은 급락했다. 알리바바와 홍콩 기술주는 중국 규제와 AI 우려로 내렸다.", [("2026-10-23", ("블랙스톤", "알리바바", "나스닥 급락"))]),
-    ])
-    if not high and not crash and not late:
+    high: list[str] = []
+    crash: list[str] = []
+    late: list[str] = []
+    marks: list[tuple[str, tuple[str, ...]]] = []
+    if dates & {"2026-10-06", "2026-10-07"}:
+        high.append("엔비디아 주가는 사상 최고였고, 시가총액은 6조 달러 돌파를 앞두고 있었다.")
+        marks.extend([("2026-10-06", ("Nvidia", "6조")), ("2026-10-07", ("6조", "엔비디아"))])
+    if "2026-10-08" in dates:
+        high.append("스페이스X는 엔비디아 칩을 사려고 400억 달러 조달을 추진했고, 5년물 CDS는 16.7bp 오른 197.6bp까지 뛰었다.")
+        marks.append(("2026-10-08", ("스페이스X", "CDS")))
+    if "2026-10-12" in dates:
+        high.append("오픈AI는 연말 연환산 매출이 700억 달러를 넘길 수 있다고 전망했다.")
+        marks.append(("2026-10-12", ("오픈AI", "700억")))
+    if "2026-10-13" in dates:
+        high.append("메타는 뮤즈 원더를 공개했고, 주가는 장중 4.7% 올랐다.")
+        marks.append(("2026-10-13", ("뮤즈",)))
+    if "2026-10-14" in dates:
+        crash.append("AI 투자에서는 균열이 나왔다. JP모간과 골드만삭스는 볼타 인프라스트럭처 대출을 제한했고, 퍼머스그리드 IPO도 무산됐다.")
+        marks.append(("2026-10-14", ("균열",)))
+    if "2026-10-15" in dates:
+        crash.append("반도체주는 엿새째 내렸다. 필라델피아 반도체지수는 4.3% 빠져 6거래일 낙폭이 11%를 넘었고, 시가총액은 1조 달러 넘게 줄었다. 코어위브 2032년 채권은 달러당 80센트 아래로 내려 부실 구간에 들어갔고, CEO는 시장이 비이성적이라고 했다.")
+        marks.append(("2026-10-15", ("6일째", "부실", "yikes")))
+    if "2026-10-19" in dates:
+        late.append("코어위브 부채 우려로 기술주가 밀렸고, 필라델피아 반도체지수는 8거래일 연속 내려 2008년 이후 가장 긴 하락이 됐다. 나스닥 100은 2.5% 내렸다. 중국은 대규모언어모델과 반도체 설계를 포함한 23개 AI 기술에 수출통제를 추진했다.")
+        marks.append(("2026-10-19", ("코어위브", "수출통제")))
+    if "2026-10-20" in dates:
+        late.append("반도체주는 반등했고, 나스닥 100은 1.2% 올랐다. JP모간은 코어위브 부채 우려가 과도하다고 봤지만, 코어위브 주가는 지난주 20% 넘게 내린 뒤 반등 시도도 약세로 마감했다. 미국은 연방기관의 딥시크 사용을 금지했다.")
+        marks.append(("2026-10-20", ("JP모간", "반도체 반등", "딥시크")))
+    if "2026-10-21" in dates:
+        late.append("엘리스는 상장 첫날 32% 내렸고, 퍼머스그리드는 300억 달러 IPO를 철회했다.")
+        marks.append(("2026-10-21", ("옥석", "IPO")))
+    if "2026-10-22" in dates:
+        late.append("스페이스X는 실적 호조에 7.8% 올랐고, 트레이드네이션은 반도체 매도세가 최악의 국면을 지났을 수 있다고 봤다.")
+        marks.append(("2026-10-22", ("스페이스X", "SpaceX")))
+    if "2026-10-23" in dates:
+        turn = "그런데 " if high or crash or late else ""
+        late.append(f"{turn}나스닥 100은 2.9% 내렸고, 필라델피아 반도체지수는 6.7% 내렸다. 메타는 실적이 예상을 넘었는데도 자본지출 전망을 높이면서 7% 내렸다. 블랙스톤은 AI 수요가 폭발적이라 버블이 아니라고 했다. 알리바바는 중국 품질 규제에 6.1% 내렸다.")
+        marks.append(("2026-10-23", ("블랙스톤", "알리바바", "나스닥 급락")))
+    paragraphs = [block for block in (" ".join(high), " ".join(crash), " ".join(late)) if block]
+    if not paragraphs:
         return "변화없음.", []
-    high_on = bool(dates & {"2026-10-06", "2026-10-07"})
-    crash_on = "2026-10-15" in dates
-    rebound = "2026-10-20" in dates
-    nasdaq = "2026-10-23" in dates
-    wobble = "2026-10-21" in dates
-    if high_on and crash_on and nasdaq:
-        status = "전환. 엔비디아 고점 이후 반도체 급락이 왔고, 반등 뒤 23일 나스닥이 다시 급락했다."
-    elif high_on and crash_on:
-        status = "전환. 엔비디아 고점 이후 반도체 급락이 왔다."
-    elif rebound and nasdaq:
-        status = "전환. 반도체 반등 뒤 23일 나스닥이 다시 급락했다."
-    elif high_on and nasdaq:
-        status = "전환. 엔비디아 고점 뒤 23일 나스닥이 급락했다."
-    elif crash_on or wobble or nasdaq:
-        status = "약세."
-    elif high_on or rebound:
-        status = "강세."
-    else:
-        status = "변화없음."
-    return _join(status, [high, crash, late]), high_marks + crash_marks + late_marks
+    return "\n\n".join(paragraphs), marks
 
 
 def themes_for(days: dict[str, dict], start: date, end: date) -> list[dict]:
@@ -341,6 +379,20 @@ def recent_dates(dates: list[str], end: date) -> list[str]:
     return [day for day in dates if start <= date.fromisoformat(day) <= end]
 
 
+def week_windows(days: dict[str, dict], ends: list[str]) -> dict[str, dict]:
+    """One rolling week per mail day. The clicked day is the window end."""
+    windows = {}
+    for day_key in ends:
+        end = date.fromisoformat(day_key)
+        start = end - timedelta(days=6)
+        windows[day_key] = {
+            "start": start.isoformat(),
+            "end": day_key,
+            "themes": themes_for(days, start, end),
+        }
+    return windows
+
+
 def build_payload(today: date | None = None) -> dict:
     days = _load_days()
     if not days:
@@ -348,23 +400,12 @@ def build_payload(today: date | None = None) -> dict:
     today = today or date.today()
     latest = date.fromisoformat(max(days))
     window_end = min(today, latest)
-    window_start = window_end - timedelta(days=6)
-    month_start = window_end - timedelta(days=29)
     dates = recent_dates(sorted(days, reverse=True), window_end)
     shown = {day: days[day] for day in dates}
     return {
         "dates": dates,
         "days": shown,
-        "windows": {
-            "week": {
-                "label": "Weekly review",
-                "themes": themes_for(days, window_start, window_end),
-            },
-            "month": {
-                "label": "Monthly review",
-                "themes": themes_for(days, month_start, window_end),
-            },
-        },
+        "weeks": week_windows(days, dates),
     }
 
 
