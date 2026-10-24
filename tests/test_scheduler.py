@@ -1,7 +1,7 @@
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
-from automation.scheduler_ingest import due
+from automation.scheduler_ingest import due, publishes
 
 KST = ZoneInfo("Asia/Seoul")
 
@@ -14,3 +14,8 @@ def test_ingest_runs_at_eight_in_the_morning_and_evening():
     assert due(evening, (morning.date(), 8))
     assert not due(datetime(2026, 10, 19, 8, 1, tzinfo=KST), None)
     assert not due(datetime(2026, 10, 19, 12, 0, tzinfo=KST), None)
+
+
+def test_page_publishes_only_after_the_morning_run():
+    assert publishes(datetime(2026, 10, 19, 8, 0, tzinfo=KST))
+    assert not publishes(datetime(2026, 10, 19, 20, 0, tzinfo=KST))

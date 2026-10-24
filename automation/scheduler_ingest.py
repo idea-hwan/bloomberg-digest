@@ -8,12 +8,14 @@
     caffeinate -i python automation/scheduler_ingest.py
 
 매일 KST 08:00, 20:00에 최근 3일 메일을 저장한다.
-아침 5가지는 07:30, Markets Daily는 18:28–19:50에 온다.
+08:00 수집이 끝나면 docs/index.html만 커밋하고 페이지를 올린다.
+20:00은 저장만 한다. 그날 저녁 레터는 다음 날 오전에 페이지에 붙는다.
 Ctrl+C로 종료.
 """
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import time
@@ -23,8 +25,10 @@ from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 LOG_FILE = ROOT / "automation" / "logs" / "scheduler.log"
+PAGE = "docs/index.html"
 KST = ZoneInfo("Asia/Seoul")
 RUN_HOURS = (8, 20)
+PUBLISH_HOUR = 8
 CHECK_INTERVAL_SEC = 20
 
 
@@ -42,24 +46,60 @@ def due(now: datetime, last_run: tuple[object, int] | None) -> bool:
     return last_run != (now.date(), now.hour)
 
 
-def run_ingest() -> None:
+def publishes(now: datetime) -> bool:
+    return now.hour == PUBLISH_HOUR
+
+
+def run_ingest() -> bool:
     log("수집 시작")
     try:
         subprocess.run([sys.executable, "-m", "app", "ingest"], cwd=ROOT, check=True)
-        log("수집 완료")
     except subprocess.CalledProcessError as exc:
         log(f"수집 실패 (exit {exc.returncode})")
+        return False
+    log("수집 완료")
+    return True
+
+
+def _git(args: list[str]) -> None:
+    env = os.environ.copy()
+    env["GIT_TERMINAL_PROMPT"] = "0"
+    subprocess.run(["git", *args], cwd=ROOT, check=True, env=env)
+
+
+def publish_page() -> None:
+    log("페이지 생성")
+    try:
+        subprocess.run([sys.executable, "-m", "app.preview"], cwd=ROOT, check=True)
+        status = subprocess.run(
+            ["git", "status", "--porcelain", "--", PAGE],
+            cwd=ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        if not status.stdout.strip():
+            log("페이지 변경 없음")
+            return
+        day = datetime.now(KST).date().isoformat()
+        _git(["commit", "-m", f"auto: 다이제스트 {day}", "--", PAGE])
+        _git(["push", "origin", "main"])
+    except subprocess.CalledProcessError as exc:
+        log(f"페이지 올리기 실패 (exit {exc.returncode})")
+        return
+    log("페이지를 올렸습니다")
 
 
 def main() -> None:
-    log("스케줄러 시작 — 매일 KST 08:00, 20:00. Ctrl+C로 종료.")
+    log("스케줄러 시작 — 매일 KST 08:00 수집 후 페이지를 올리고, 20:00은 저장만. Ctrl+C로 종료.")
     last_run: tuple[object, int] | None = None
     try:
         while True:
             now = datetime.now(KST)
             if due(now, last_run):
                 last_run = (now.date(), now.hour)
-                run_ingest()
+                if run_ingest() and publishes(now):
+                    publish_page()
             time.sleep(CHECK_INTERVAL_SEC)
     except KeyboardInterrupt:
         log("스케줄러 종료 (Ctrl+C)")
