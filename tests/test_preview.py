@@ -1,6 +1,11 @@
 from datetime import date
 
-from app.preview import themes_for
+from app.preview import recent_dates, themes_for
+
+
+def test_day_list_keeps_only_the_latest_month():
+    dates = ["2026-10-24", "2026-09-24", "2026-09-23", "2026-08-01"]
+    assert recent_dates(dates, date(2026, 10, 24)) == ["2026-10-24", "2026-09-24"]
 
 
 def test_themes_group_repeated_headlines_and_skip_one_offs():

@@ -118,19 +118,26 @@ def themes_for(days: dict[str, dict], start: date, end: date) -> list[dict]:
     return ranked
 
 
+def recent_dates(dates: list[str], end: date) -> list[str]:
+    """Day chips stay within the latest month. Older letters stay on disk."""
+    start = end - timedelta(days=30)
+    return [day for day in dates if start <= date.fromisoformat(day) <= end]
+
+
 def build_payload(today: date | None = None) -> dict:
     days = _load_days()
     if not days:
         raise SystemExit("저장된 추출본이 없습니다.")
     today = today or date.today()
-    dates = sorted(days, reverse=True)
-    latest = date.fromisoformat(dates[0])
+    latest = date.fromisoformat(max(days))
     window_end = min(today, latest)
     window_start = window_end - timedelta(days=6)
     month_start = date(window_end.year, window_end.month, 1)
+    dates = recent_dates(sorted(days, reverse=True), window_end)
+    shown = {day: days[day] for day in dates}
     return {
         "dates": dates,
-        "days": days,
+        "days": shown,
         "windows": {
             "week": {
                 "label": f"{window_start.month}/{window_start.day}–{window_end.month}/{window_end.day}",
