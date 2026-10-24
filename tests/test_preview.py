@@ -1,6 +1,11 @@
 from datetime import date
 
-from app.preview import daily_view, recent_dates, summarize, themes_for
+from app.preview import commentary_summary, daily_view, recent_dates, summarize, themes_for
+
+def test_commentary_summary_stops_near_ten_lines():
+    paragraphs = ["A" * 400, "B" * 400, "C" * 400]
+    summary = commentary_summary("\n\n".join(paragraphs))
+    assert summary == "\n\n".join(paragraphs[:2])
 
 
 def test_morning_summary_keeps_the_lead_and_drops_the_rest():
@@ -20,7 +25,9 @@ def test_new_layout_starts_on_oct_23_and_keeps_older_days():
     assert "five" not in older
     assert older["sections"] == ["Election scenarios"]
     assert current["five"] == ["One.", "Two."]
-    assert current["commentary"] == ["Election scenarios"]
+    assert current["commentary"][0]["heading"] == "Election scenarios"
+    assert current["commentary"][0]["summary"] == "essay"
+    assert current["sections"] == ["Election scenarios"]
 
 
 def test_day_list_keeps_only_the_latest_month():

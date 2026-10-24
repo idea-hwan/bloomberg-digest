@@ -167,6 +167,23 @@
       letter-spacing: -0.02em;
     }
     #morning .fold[aria-expanded="true"] + .summary { display: block; }
+    #commentary li { display: block; padding: 0; }
+    #commentary .fold {
+      display: block;
+      width: 100%;
+      padding: 11px 0;
+      text-align: left;
+      font-size: 17px;
+      letter-spacing: -0.02em;
+    }
+    #commentary .summary {
+      display: none;
+      margin: 0 0 14px;
+      font-size: 17px;
+      line-height: 1.5;
+    }
+    #commentary .summary p { margin: 0 0 12px; }
+    #commentary .fold[aria-expanded="true"] + .summary { display: block; }
     .stories li.note { display: block; }
     ol li, .stories li {
       display: grid;
@@ -256,7 +273,7 @@
       .market .value span { display: block; margin-top: 2px; font-size: 13px; }
       .market strong { font-size: 17px; }
       ol li, .stories li { font-size: 16px; padding: 13px 0; }
-      #morning .fold, #morning .summary { font-size: 16px; }
+      #morning .fold, #morning .summary, #commentary .fold, #commentary .summary { font-size: 16px; }
       .hits li { display: block; padding: 10px 0; }
       .hits li span:nth-child(1),
       .hits li span:nth-child(2) { display: inline; }
@@ -384,7 +401,12 @@
           : `<p class="empty">이 날은 5 things가 없습니다.</p>`;
         const notes = daily.commentary || [];
         commentaryEl.innerHTML = notes.length
-          ? notes.map((heading) => `<li class="note"><span>${esc(heading)}</span></li>`).join("")
+          ? notes.map((note) => `
+            <li>
+              <button type="button" class="fold" aria-expanded="false"><span>${esc(note.heading)}</span></button>
+              ${note.summary ? `<div class="summary">${note.summary.split(/\n\n/).map((part) => `<p>${esc(part)}</p>`).join("")}</div>` : ""}
+            </li>
+          `).join("")
           : `<p class="empty">이 날은 commentary가 없습니다.</p>`;
         return;
       }
@@ -416,12 +438,14 @@
       `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
     }
 
-    morningEl.addEventListener("click", (event) => {
+    function toggleFold(event) {
       const button = event.target.closest(".fold");
       if (!button) return;
       const open = button.getAttribute("aria-expanded") === "true";
       button.setAttribute("aria-expanded", open ? "false" : "true");
-    });
+    }
+    morningEl.addEventListener("click", toggleFold);
+    commentaryEl.addEventListener("click", toggleFold);
 
     datesEl.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-date]");

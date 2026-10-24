@@ -43,6 +43,19 @@ def five_lines(body: str) -> list[str]:
     return [part.strip() for part in (body or "").split("\n\n") if part.strip()]
 
 
+def commentary_summary(body: str, limit: int = 900) -> str:
+    """About ten lines. Later paragraphs stay off the page."""
+    paragraphs = [re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n", body or "") if part.strip()]
+    chosen: list[str] = []
+    total = 0
+    for paragraph in paragraphs:
+        if chosen and total + len(paragraph) > limit:
+            break
+        chosen.append(paragraph)
+        total += len(paragraph)
+    return "\n\n".join(chosen)
+
+
 def summarize(body: str) -> str:
     """The lead paragraph. The rest of the story stays off the page."""
     paragraphs = [re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n", body or "") if part.strip()]
@@ -50,12 +63,15 @@ def summarize(body: str) -> str:
 
 
 def daily_view(row: dict) -> dict:
-    commentary = [
-        section.get("heading") or ""
+    notes = [
+        {
+            "heading": section.get("heading") or "",
+            "summary": commentary_summary(section.get("body") or ""),
+        }
         for section in row.get("sections") or []
         if section.get("heading") and not _skipped(section.get("heading") or "")
     ]
-    view = {"headline": row.get("headline") or "", "sections": commentary}
+    view = {"headline": row.get("headline") or "", "sections": [note["heading"] for note in notes]}
     if date.fromisoformat(row["date"]) < LAYOUT_FROM:
         return view
     five_body = next(
@@ -67,7 +83,7 @@ def daily_view(row: dict) -> dict:
         "",
     )
     view["five"] = five_lines(five_body)
-    view["commentary"] = commentary
+    view["commentary"] = notes
     return view
 
 
