@@ -33,6 +33,14 @@ THEMES = (
 WEEKDAYS = "월화수목금토일"
 LATIN_ALIAS = re.compile(r"^[a-z0-9]+$")
 LAYOUT_FROM = date(2026, 10, 23)
+MARKET_NAMES = {
+    "S&P 500 지수": "S&P 500",
+    "나스닥 100 지수": "Nasdaq 100",
+    "美 국채 10년물 금리": "US 10Y",
+    "달러-원 환율": "USD/KRW",
+    "블룸버그 달러 지수": "Bloomberg Dollar",
+    "브렌트 원유 선물": "Brent",
+}
 
 
 def _skipped(heading: str) -> bool:
@@ -54,6 +62,10 @@ def commentary_summary(body: str, limit: int = 900) -> str:
         chosen.append(paragraph)
         total += len(paragraph)
     return "\n\n".join(chosen)
+
+
+def market_label(name: str) -> str:
+    return MARKET_NAMES.get(name, name)
 
 
 def first_sentence(text: str) -> str:
@@ -111,7 +123,10 @@ def _load_days() -> dict[str, dict]:
             day["morning"] = {
                 "hook": row.get("hook") or "",
                 "line": first_sentence(row.get("lead") or ""),
-                "markets": row.get("markets") or [],
+                "markets": [
+                    {**item, "name": market_label(item.get("name") or "")}
+                    for item in row.get("markets") or []
+                ],
                 "items": [
                     {
                         "n": item["n"],

@@ -1,11 +1,20 @@
 from datetime import date
 
-from app.preview import commentary_summary, daily_view, first_sentence, recent_dates, summarize, themes_for
+from app.preview import commentary_summary, daily_view, first_sentence, market_label, recent_dates, summarize, themes_for
 
 def test_commentary_summary_stops_near_ten_lines():
     paragraphs = ["A" * 400, "B" * 400, "C" * 400]
     summary = commentary_summary("\n\n".join(paragraphs))
     assert summary == "\n\n".join(paragraphs[:2])
+
+
+def test_market_cards_use_english_names():
+    assert market_label("나스닥 100 지수") == "Nasdaq 100"
+    assert market_label("美 국채 10년물 금리") == "US 10Y"
+    assert market_label("달러-원 환율") == "USD/KRW"
+    assert market_label("블룸버그 달러 지수") == "Bloomberg Dollar"
+    assert market_label("브렌트 원유 선물") == "Brent"
+    assert market_label("S&P 500 지수") == "S&P 500"
 
 
 def test_day_headline_is_the_first_sentence_of_the_lead():
