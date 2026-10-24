@@ -43,22 +43,10 @@ def five_lines(body: str) -> list[str]:
     return [part.strip() for part in (body or "").split("\n\n") if part.strip()]
 
 
-def summarize(body: str, limit: int = 130) -> str:
-    """Lead sentences only, about four or five lines on a phone."""
-    text = re.sub(r"\s+", " ", body or "").strip()
-    sentences = [part.strip() for part in re.findall(r".+?다\.", text)]
-    if not sentences:
-        return text
-    chosen: list[str] = []
-    total = 0
-    for sentence in sentences:
-        if chosen and total + len(sentence) > limit:
-            break
-        chosen.append(sentence)
-        total += len(sentence)
-        if len(chosen) == 2:
-            break
-    return " ".join(chosen)
+def summarize(body: str) -> str:
+    """The lead paragraph. The rest of the story stays off the page."""
+    paragraphs = [re.sub(r"\s+", " ", part).strip() for part in re.split(r"\n\s*\n", body or "") if part.strip()]
+    return paragraphs[0] if paragraphs else ""
 
 
 def daily_view(row: dict) -> dict:
