@@ -16,6 +16,7 @@ def test_ingest_runs_at_eight_in_the_morning_and_evening():
     assert not due(datetime(2026, 10, 19, 12, 0, tzinfo=KST), None)
 
 
-def test_page_publishes_only_after_the_morning_run():
+def test_page_publishes_after_the_morning_and_evening_runs():
     assert publishes(datetime(2026, 10, 19, 8, 0, tzinfo=KST))
-    assert not publishes(datetime(2026, 10, 19, 20, 0, tzinfo=KST))
+    assert publishes(datetime(2026, 10, 19, 20, 0, tzinfo=KST))
+    assert not publishes(datetime(2026, 10, 19, 12, 0, tzinfo=KST))

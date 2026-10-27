@@ -7,9 +7,8 @@
     source .venv/bin/activate
     caffeinate -i python automation/scheduler_ingest.py
 
-매일 KST 08:00, 20:00에 최근 3일 메일을 저장한다.
-08:00 수집이 끝나면 docs/index.html만 커밋하고 페이지를 올린다.
-20:00은 저장만 한다. 그날 저녁 레터는 다음 날 오전에 페이지에 붙는다.
+매일 KST 08:00, 20:00에 최근 3일 메일을 저장하고 페이지를 올린다.
+메일이 늦으면 그날 업데이트가 늦어질 뿐, 다음 날 아침으로 넘어가지 않는다.
 Ctrl+C로 종료.
 """
 
@@ -28,7 +27,6 @@ LOG_FILE = ROOT / "automation" / "logs" / "scheduler.log"
 PAGE = "docs/index.html"
 KST = ZoneInfo("Asia/Seoul")
 RUN_HOURS = (8, 20)
-PUBLISH_HOUR = 8
 CHECK_INTERVAL_SEC = 20
 
 
@@ -47,7 +45,7 @@ def due(now: datetime, last_run: tuple[object, int] | None) -> bool:
 
 
 def publishes(now: datetime) -> bool:
-    return now.hour == PUBLISH_HOUR
+    return now.hour in RUN_HOURS and now.minute == 0
 
 
 def run_ingest() -> bool:
@@ -91,7 +89,7 @@ def publish_page() -> None:
 
 
 def main() -> None:
-    log("스케줄러 시작 — 매일 KST 08:00 수집 후 페이지를 올리고, 20:00은 저장만. Ctrl+C로 종료.")
+    log("스케줄러 시작 — 매일 KST 08:00, 20:00 수집 후 페이지를 올립니다. Ctrl+C로 종료.")
     last_run: tuple[object, int] | None = None
     try:
         while True:
