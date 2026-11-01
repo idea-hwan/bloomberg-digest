@@ -1,6 +1,6 @@
 from datetime import date
 
-from app.preview import commentary_summary, daily_view, first_sentence, market_label, narrative_for, recent_dates, summarize, themes_for, week_windows
+from app.preview import commentary_summary, daily_view, first_sentence, issues_for, market_label, narrative_for, recent_dates, summarize, themes_for, week_windows
 
 def test_commentary_summary_stops_near_ten_lines():
     paragraphs = ["A" * 400, "B" * 400, "C" * 400]
@@ -103,3 +103,44 @@ def test_themes_stay_on_three_lanes():
     tech = themes[2]
     assert tech["days"] == 2
     assert any(hit["cited"] for hit in tech["hits"])
+
+
+def test_issues_are_stories_that_continue_inside_seven_days():
+    days = {
+        "2026-10-26": {
+            "morning": {
+                "markets": [
+                    {"name": "브렌트 원유 선물", "value": "$116.72", "change": "+3.1%"},
+                    {"name": "나스닥 100 지수", "value": "28,957.53", "change": "-0.0%"},
+                    {"name": "美 국채 10년물 금리", "value": "4.99%", "change": "+0.04"},
+                ]
+            }
+        },
+        "2026-10-30": {
+            "morning": {
+                "markets": [
+                    {"name": "브렌트 원유 선물", "value": "$115.54", "change": "+0.2%"},
+                    {"name": "나스닥 100 지수", "value": "29,402.51", "change": "-1.4%"},
+                    {"name": "美 국채 10년물 금리", "value": "4.94%", "change": "-0.08"},
+                ]
+            }
+        },
+    }
+    week = week_windows(days, ["2026-10-31", "2026-10-26"])
+    saturday = week["2026-10-31"]
+    assert saturday["start"] == "2026-10-25"
+    assert saturday["span"][0] == "2026-10-25"
+    assert saturday["span"][-1] == "2026-10-31"
+    assert [issue["name"] for issue in saturday["issues"]] == ["이란", "AI", "금리"]
+    iran = saturday["issues"][0]
+    assert "2026-10-25" not in iran["cells"]
+    assert "2026-10-31" not in iran["cells"]
+    assert iran["cells"]["2026-10-26"] == "선거 후 확전 우려"
+    assert iran["metric"]["points"]["2026-10-26"]["value"] == "$116.72"
+    ai = saturday["issues"][1]
+    assert "2026-10-26" not in ai["cells"]
+    assert ai["metric"]["points"]["2026-10-26"]["value"] == "28,957.53"
+    assert any(hit["series"] == "오후" for hit in iran["hits"])
+    assert [issue["name"] for issue in week["2026-10-26"]["issues"]] == []
+    lone = issues_for(days, date(2026, 10, 27), date(2026, 10, 27))
+    assert lone == []

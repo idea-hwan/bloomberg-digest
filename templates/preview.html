@@ -129,8 +129,44 @@
       background: var(--ink);
       color: var(--paper);
     }
-    .weekhead { align-items: flex-start; }
-    .theme-col { flex: 1; min-width: 0; }
+    .weekhead { flex-direction: column; align-items: stretch; }
+    .weekhead .cal { width: min(100%, 420px); }
+    .theme-col { width: 100%; }
+    .issue-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+    }
+    .issue-head strong { font-size: 18px; letter-spacing: -0.03em; }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .board .d {
+      color: var(--muted);
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+    }
+    .board .line {
+      margin: 6px 0 0;
+      min-height: 2.7em;
+      font-size: 14px;
+      line-height: 1.35;
+      letter-spacing: -0.03em;
+    }
+    .board .quote {
+      margin: 8px 0 0;
+      min-height: 2.4em;
+      font-size: 12px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.3;
+    }
+    .board .quote strong { display: block; font-size: 13px; }
+    .theme.issue[aria-expanded="true"] .hits { display: none; }
+    .theme.issue .expand[aria-expanded="true"] + .hits { display: block; }
     .cal-grid .off { color: #c8c2b6; font-weight: 500; }
     .hook {
       font-size: 32px;
@@ -270,7 +306,6 @@
     .narrative p:last-child { margin-bottom: 0; }
     .theme[aria-expanded="true"] .narrative,
     .theme[aria-expanded="true"] .expand { display: block; }
-    .theme[aria-expanded="true"]:not(:has(.narrative)) .hits,
     .expand[aria-expanded="true"] + .hits { display: block; }
     .hits li {
       display: grid;
@@ -320,6 +355,11 @@
       ol li, .stories li { font-size: 16px; padding: 13px 0; }
       #morning .fold, #morning .summary, #commentary .fold, #commentary .summary, .narrative { font-size: 16px; }
       .expand { min-height: 44px; }
+      .board {
+        grid-template-columns: repeat(7, 108px);
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
       .hits li { display: block; padding: 10px 0; }
       .hits li span:nth-child(1),
       .hits li span:nth-child(2) { display: inline; }
@@ -394,7 +434,7 @@
     const viewDay = document.querySelector("#view-day");
     const viewThemes = document.querySelector("#view-themes");
     let selected = DATA.dates.find((day) => DATA.days[day].morning) || DATA.dates[0];
-    let weekEnd = DATA.dates[0];
+    let weekEnd = DATA.today && DATA.weeks[DATA.today] ? DATA.today : DATA.dates[0];
 
     function tone(change) {
       const value = String(change || "").trim();
@@ -509,18 +549,27 @@
     }
 
     function renderThemes() {
-      const themes = DATA.weeks[weekEnd].themes;
+      const week = DATA.weeks[weekEnd];
+      const issues = week.issues || [];
       renderWeekDates();
-      themeList.innerHTML = themes.length ? themes.map((theme) => `
-        <article class="theme" aria-expanded="true">
-          <button type="button" class="theme-head"><strong>${theme.name}</strong><span class="count">${theme.days}일</span></button>
-          ${theme.narrative ? `<div class="narrative">${theme.narrative.split(/\n\n/).map((part) => `<p>${esc(part)}</p>`).join("")}</div>` : ""}
-          ${theme.hits.length ? `<button type="button" class="expand" aria-expanded="false">펼치기</button>` : ""}
+      themeList.innerHTML = issues.length ? issues.map((issue) => `
+        <article class="theme issue" aria-expanded="true">
+          <div class="issue-head"><strong>${esc(issue.name)}</strong><span class="count">${issue.days}일${issue.metric ? ` · ${esc(issue.metric.name)}` : ""}</span></div>
+          <div class="board">
+            ${week.span.map((day) => {
+              const point = issue.metric && issue.metric.points[day];
+              const quote = issue.metric
+                ? (point ? `<p class="quote ${tone(point.change)}"><strong>${esc(point.value)}</strong><span>${esc(point.change)}</span></p>` : `<p class="quote"></p>`)
+                : "";
+              return `<div class="cell"><span class="d">${shortDate(day)}</span><p class="line">${esc(issue.cells[day] || "")}</p>${quote}</div>`;
+            }).join("")}
+          </div>
+          ${issue.hits.length ? `<button type="button" class="expand" aria-expanded="false">펼치기</button>` : ""}
           <ul class="hits">
-            ${theme.hits.map((hit) => `<li class="${hit.cited ? "cited" : ""}"><span>${shortDate(hit.date)}</span><span class="series">${hit.series}</span><span>${hit.headline}</span></li>`).join("")}
+            ${issue.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${esc(hit.series)}</span><span>${esc(hit.headline)}</span></li>`).join("")}
           </ul>
         </article>
-      `).join("") : `<p class="empty">이 기간에 반복된 제목이 없습니다.</p>`;
+      `).join("") : `<p class="empty">이 7일에는 이틀 이상 이어진 이슈가 없습니다.</p>`;
     }
 
     function toggleFold(event) {
@@ -584,6 +633,7 @@
     renderDates();
     renderDay();
     renderThemes();
+    if (location.hash === "#weekly") document.querySelector("#tab-themes").click();
   </script>
 </body>
 </html>
