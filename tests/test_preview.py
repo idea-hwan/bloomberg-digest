@@ -108,9 +108,10 @@ def test_themes_stay_on_three_lanes():
 
 
 def test_weekend_review_keeps_topics_mentioned_twice():
-    assert review_friday(date(2026, 11, 16)) == date(2026, 11, 13)
-    assert review_friday(date(2026, 11, 13)) == date(2026, 11, 13)
+    assert review_friday(date(2026, 11, 13)) == date(2026, 11, 6)
     assert review_friday(date(2026, 11, 14)) == date(2026, 11, 13)
+    assert review_friday(date(2026, 11, 15)) == date(2026, 11, 13)
+    assert review_friday(date(2026, 11, 16)) == date(2026, 11, 13)
 
     def morning(headlines, markets=None):
         return {

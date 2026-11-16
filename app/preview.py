@@ -429,9 +429,9 @@ def weekday_week(day: date) -> tuple[date, date, list[str]]:
 
 
 def review_friday(day: date) -> date:
-    """The finished weekday week. Monday through Thursday still open the previous Friday."""
+    """Weekly is the weekend edition. It stays on the previous week until Saturday."""
     _monday, friday, _span = weekday_week(day)
-    if day.weekday() < 4:
+    if day.weekday() <= 4:
         friday -= timedelta(days=7)
     return friday
 

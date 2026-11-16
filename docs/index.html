@@ -591,7 +591,9 @@
     weekDatesEl.addEventListener("click", (event) => {
       const button = event.target.closest("button[data-date]");
       if (!button || !DATA.weeks[button.dataset.date]) return;
-      weekEnd = button.dataset.date;
+      const chosen = DATA.weeks[button.dataset.date].end;
+      if (DATA.week && chosen > DATA.week) return;
+      weekEnd = chosen;
       renderThemes();
     });
 
