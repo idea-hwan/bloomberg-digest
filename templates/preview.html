@@ -141,7 +141,7 @@
     .issue-head strong { font-size: 18px; letter-spacing: -0.03em; }
     .board {
       display: grid;
-      grid-template-columns: repeat(7, minmax(0, 1fr));
+      grid-template-columns: repeat(5, minmax(0, 1fr));
       gap: 8px;
       margin-top: 14px;
     }
@@ -356,7 +356,7 @@
       #morning .fold, #morning .summary, #commentary .fold, #commentary .summary, .narrative { font-size: 16px; }
       .expand { min-height: 44px; }
       .board {
-        grid-template-columns: repeat(7, 108px);
+        grid-template-columns: repeat(5, 120px);
         overflow-x: auto;
         padding-bottom: 4px;
       }
@@ -434,7 +434,7 @@
     const viewDay = document.querySelector("#view-day");
     const viewThemes = document.querySelector("#view-themes");
     let selected = DATA.dates.find((day) => DATA.days[day].morning) || DATA.dates[0];
-    let weekEnd = DATA.today && DATA.weeks[DATA.today] ? DATA.today : DATA.dates[0];
+    let weekEnd = DATA.week && DATA.weeks[DATA.week] ? DATA.week : DATA.dates[0];
 
     function tone(change) {
       const value = String(change || "").trim();
@@ -554,7 +554,7 @@
       renderWeekDates();
       themeList.innerHTML = issues.length ? issues.map((issue) => `
         <article class="theme issue" aria-expanded="true">
-          <div class="issue-head"><strong>${esc(issue.name)}</strong><span class="count">${issue.days}일${issue.metric ? ` · ${esc(issue.metric.name)}` : ""}</span></div>
+          <div class="issue-head"><strong>${esc(issue.name)}</strong><span class="count">${issue.mentions}건${issue.metric ? ` · ${esc(issue.metric.name)}` : ""}</span></div>
           <div class="board">
             ${week.span.map((day) => {
               const point = issue.metric && issue.metric.points[day];
@@ -569,7 +569,7 @@
             ${issue.hits.map((hit) => `<li><span>${shortDate(hit.date)}</span><span class="series">${esc(hit.series)}</span><span>${esc(hit.headline)}</span></li>`).join("")}
           </ul>
         </article>
-      `).join("") : `<p class="empty">이 7일에는 이틀 이상 이어진 이슈가 없습니다.</p>`;
+      `).join("") : `<p class="empty">이 주에는 두 번 이상 나온 주제가 없습니다.</p>`;
     }
 
     function toggleFold(event) {

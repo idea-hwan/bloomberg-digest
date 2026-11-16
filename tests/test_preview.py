@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, timedelta
 
-from app.preview import commentary_summary, daily_view, first_sentence, issues_for, market_label, narrative_for, recent_dates, summarize, themes_for, week_windows
+from app.preview import commentary_summary, daily_view, first_sentence, issues_for, market_label, narrative_for, recent_dates, review_friday, summarize, themes_for, week_windows
 
 def test_commentary_summary_stops_near_ten_lines():
     paragraphs = ["A" * 400, "B" * 400, "C" * 400]
@@ -78,9 +78,11 @@ def test_each_mail_day_opens_its_own_week():
         "2026-10-23": {"morning": {"hook": "나스닥 급락", "items": [{"headline": "佛국채 불안"}], "markets": []}, "daily": None},
     }
     weeks = week_windows(days, ["2026-10-23", "2026-10-22"])
-    assert weeks["2026-10-23"]["start"] == "2026-10-17"
-    assert weeks["2026-10-22"]["start"] == "2026-10-16"
-    assert weeks["2026-10-23"]["themes"][0]["name"] == "Macro"
+    monday = date(2026, 10, 23) - timedelta(days=date(2026, 10, 23).weekday())
+    assert weeks["2026-10-23"]["start"] == monday.isoformat()
+    assert weeks["2026-10-22"]["start"] == monday.isoformat()
+    assert weeks["2026-10-23"]["end"] == "2026-10-23"
+    assert len(weeks["2026-10-23"]["span"]) == 5
 
 
 def test_themes_stay_on_three_lanes():
@@ -105,42 +107,42 @@ def test_themes_stay_on_three_lanes():
     assert any(hit["cited"] for hit in tech["hits"])
 
 
-def test_issues_are_stories_that_continue_inside_seven_days():
+def test_weekend_review_keeps_topics_mentioned_twice():
+    assert review_friday(date(2026, 11, 16)) == date(2026, 11, 13)
+    assert review_friday(date(2026, 11, 13)) == date(2026, 11, 13)
+    assert review_friday(date(2026, 11, 14)) == date(2026, 11, 13)
+
+    def morning(headlines, markets=None):
+        return {
+            "morning": {
+                "items": [{"headline": headline} for headline in headlines],
+                "markets": markets or [],
+            },
+            "daily": {"five": []},
+        }
+
     days = {
-        "2026-10-26": {
-            "morning": {
-                "markets": [
-                    {"name": "브렌트 원유 선물", "value": "$116.72", "change": "+3.1%"},
-                    {"name": "나스닥 100 지수", "value": "28,957.53", "change": "-0.0%"},
-                    {"name": "美 국채 10년물 금리", "value": "4.99%", "change": "+0.04"},
-                ]
-            }
-        },
-        "2026-10-30": {
-            "morning": {
-                "markets": [
-                    {"name": "브렌트 원유 선물", "value": "$115.54", "change": "+0.2%"},
-                    {"name": "나스닥 100 지수", "value": "29,402.51", "change": "-1.4%"},
-                    {"name": "美 국채 10년물 금리", "value": "4.94%", "change": "-0.08"},
-                ]
-            }
-        },
+        "2026-11-09": morning(["앤트로픽 IPO 눈높이", "미·이란 합의"]),
+        "2026-11-10": morning(
+            ["엔비디아 추격", "연준 추가 인상", "이란 유가 급락"],
+            [
+                {"name": "나스닥 100 지수", "value": "1", "change": "-1.0%"},
+                {"name": "美 국채 10년물 금리", "value": "5.00%", "change": "+0.01"},
+                {"name": "브렌트 원유 선물", "value": "$90", "change": "-2.0%"},
+            ],
+        ),
+        "2026-11-11": morning(["앤트로픽 IPO 승부수", "미국채 10년물 다시 5%", "브렌트유 90달러 아래"]),
+        "2026-11-12": morning(["엔비디아 강세론 균열"]),
+        "2026-11-13": morning(["젠슨 황 시대 끝난 엔비디아", "연준 인플레 경고", "유가 상승"]),
+        "2026-11-16": morning(["단발 뉴스"]),
     }
-    week = week_windows(days, ["2026-10-31", "2026-10-26"])
-    saturday = week["2026-10-31"]
-    assert saturday["start"] == "2026-10-25"
-    assert saturday["span"][0] == "2026-10-25"
-    assert saturday["span"][-1] == "2026-10-31"
-    assert [issue["name"] for issue in saturday["issues"]] == ["이란", "AI", "금리"]
-    iran = saturday["issues"][0]
-    assert "2026-10-25" not in iran["cells"]
-    assert "2026-10-31" not in iran["cells"]
-    assert iran["cells"]["2026-10-26"] == "선거 후 확전 우려"
-    assert iran["metric"]["points"]["2026-10-26"]["value"] == "$116.72"
-    ai = saturday["issues"][1]
-    assert "2026-10-26" not in ai["cells"]
-    assert ai["metric"]["points"]["2026-10-26"]["value"] == "28,957.53"
-    assert any(hit["series"] == "오후" for hit in iran["hits"])
-    assert [issue["name"] for issue in week["2026-10-26"]["issues"]] == []
-    lone = issues_for(days, date(2026, 10, 27), date(2026, 10, 27))
-    assert lone == []
+    weeks = week_windows(days, ["2026-11-13", "2026-11-16"])
+    last = weeks["2026-11-13"]
+    assert last["start"] == "2026-11-09"
+    assert last["span"] == ["2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13"]
+    assert [issue["name"] for issue in last["issues"]] == ["이란", "금리", "엔비디아", "앤트로픽"]
+    iran = last["issues"][0]
+    assert iran["metric"]["points"]["2026-11-10"]["value"] == "$90"
+    assert iran["cells"]["2026-11-09"] == "미·이란 합의"
+    assert weeks["2026-11-16"]["issues"] == []
+    assert issues_for(days, date(2026, 11, 16), date(2026, 11, 20)) == []

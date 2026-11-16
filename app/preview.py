@@ -387,129 +387,108 @@ def _quote(day: dict | None, label: str) -> dict | None:
     return None
 
 
-# A story is an issue only after it continues on two or more days.
-# One-day items stay off this list. Cells are the day's turn, and hits are the source lines.
-ISSUE_SPECS = (
-    {
-        "name": "이란",
-        "metric": "Brent",
-        "cells": {
-            "2026-10-26": "선거 후 확전 우려",
-            "2026-10-27": "사우디, 테헤란 집결",
-            "2026-10-28": "미국에 종전 조건",
-            "2026-10-29": "재공격 가능성",
-            "2026-10-30": "밴스 서한",
-        },
-        "hits": (
-            ("2026-10-26", "오전", "美·이스라엘 선거 후 이란 확전 우려"),
-            ("2026-10-26", "오전", "브렌트 한때 117달러 돌파"),
-            ("2026-10-26", "오후", "Top security officials from Saudi Arabia, Pakistan and Turkey are meeting Iran’s leaders today."),
-            ("2026-10-27", "오전", "이란 재공습 우려 속 중재 외교…사우디 등 테헤란 집결"),
-            ("2026-10-28", "오전", "이란, 美에 종전 조건 재확인…중동 외교전 분주"),
-            ("2026-10-28", "오후", "US stock futures struggled for direction as the impact of rising oil prices offset fresh gains in the artificial intelligence trade."),
-            ("2026-10-29", "오전", "美 이란 재공격 가능성에 유가 상승"),
-            ("2026-10-30", "오전", "이란, 밴스 서한 받아…이스라엘 총선 네타냐후 진영 53석"),
-            ("2026-10-30", "오후", "Crude oil gained on signs the US may resume military strikes against Iran."),
-        ),
-    },
-    {
-        "name": "AI",
-        "metric": "Nasdaq 100",
-        "cells": {
-            "2026-10-27": "앤트로픽 IPO, 메타 950억 달러 발행",
-            "2026-10-28": "신용 불안 정점 근접",
-            "2026-10-29": "핌코, AI 부채 축소",
-            "2026-10-30": "알파벳 투자 리스크",
-        },
-        "hits": (
-            ("2026-10-27", "오전", "앤트로픽 IPO 신청…“AI, 인류에 실존적 위험 초래할 수도”"),
-            ("2026-10-27", "오전", "메타, AI 투자 위해 최대 950억달러 주식 발행"),
-            ("2026-10-27", "오전", "시타델 살라메 “AI의 밀물, 일부 배 침몰시킬 것”"),
-            ("2026-10-27", "오후", "The burst of enthusiasm for AI that followed Anthropic’s IPO filing lost some momentum."),
-            ("2026-10-27", "오후", "Meta boosted a planned share sale to almost $98 billion."),
-            ("2026-10-28", "오전", "노보그라츠 “신용 불안 정점 근접…AI자금조달 우려 완화”"),
-            ("2026-10-28", "오전", "PE업계, AI 충격에 디폴트 유예 조항 추진"),
-            ("2026-10-28", "오후", "SK Hynix plans to return $45 billion more to shareholders after profit surged thanks to the AI infrastructure rollout."),
-            ("2026-10-29", "오전", "AI 부채 공급 한계 조짐…핌코는 일찌감치 축소"),
-            ("2026-10-29", "오후", "Alphabet tumbles 10% after sales underwhelmed."),
-            ("2026-10-29", "오후", "Samsung also disappointed. Nasdaq futures sink 1%."),
-            ("2026-10-29", "오후", "Marvell is in talks to buy data center optics maker Lumentum."),
-            ("2026-10-30", "오전", "알파벳 AI 투자 리스크 눈덩이"),
-            ("2026-10-30", "오전", "마이크로소프트 대규모 회사채 발행"),
-            ("2026-10-30", "오후", "Intel shares are plummeting 25% after the chipmaker’s forecast missed analysts’ estimates."),
-            ("2026-10-30", "오후", "Amazon’s slumping too, down 6.6%, after the company reported greater capital spending than anticipated."),
-            ("2026-10-30", "오후", "US stock-index futures are dropping as investors shift out of tech stocks."),
-        ),
-    },
-    {
-        "name": "금리",
-        "metric": "US 10Y",
-        "cells": {
-            "2026-10-26": "매파적 동결 전망",
-            "2026-10-28": "채권시장",
-            "2026-10-29": "연준 10:2 동결, 워시",
-            "2026-10-30": "해싯, ECB 동결, 라가르드",
-        },
-        "hits": (
-            ("2026-10-26", "오전", "연준·ECB·BOJ ‘매파적 동결’ 전망"),
-            ("2026-10-26", "오전", "연준 동결 전망 속 ‘인상 경계’...달러 지지"),
-            ("2026-10-28", "오전", "美 의회 교착은 호재? 채권시장 ‘이번엔 다르다’"),
-            ("2026-10-28", "오후", "Economists see the Fed holding interest rates steady even after surprisingly hot September inflation."),
-            ("2026-10-29", "오전", "연준, 10:2로 금리 동결…워시 “필요시 행동”"),
-            ("2026-10-29", "오전", "캐나다, 25bp 금리 인상…추가 인상 가능성 시사"),
-            ("2026-10-29", "오후", "Christine Lagarde announced she’ll leave the ECB in early 2027."),
-            ("2026-10-29", "오후", "The ECB is set to keep interest rates on hold. Kevin Warsh telegraphed the potential for more hikes."),
-            ("2026-10-30", "오전", "美 성장·물가 강세…해싯 “물가 높으면 연준 행동”"),
-            ("2026-10-30", "오전", "ECB, 금리 동결...라가르드 조기 퇴임"),
-        ),
-    },
+# Weekend review. A topic needs two mentions in the Mon–Fri week, then the busiest five stay.
+TOPIC_SPECS = (
+    {"name": "금리", "metric": "US 10Y", "aliases": ("금리", "연준", "국채", "10년물", "cpi", "인플레", "물가", "ecb", "boe", "treasury", "treasuries", "fed")},
+    {"name": "이란", "metric": "Brent", "aliases": ("이란", "유가", "브렌트", "brent", "원유")},
+    {"name": "엔비디아", "metric": "Nasdaq 100", "aliases": ("엔비디아", "nvidia", "젠슨", "jensen")},
+    {"name": "앤트로픽", "metric": None, "aliases": ("앤트로픽", "anthropic")},
+    {"name": "우크라이나", "metric": None, "aliases": ("우크라", "우크라이나", "푸틴", "putin")},
+    {"name": "고용", "metric": None, "aliases": ("고용", "실업", "payroll")},
+    {"name": "스페이스X", "metric": None, "aliases": ("스페이스x", "spacex")},
+    {"name": "코어위브", "metric": None, "aliases": ("코어위브", "coreweave")},
 )
+TOPIC_MIN = 2
+TOPIC_LIMIT = 5
+
+
+def _short_source(text: str) -> str:
+    cleaned = re.sub(r"\s+", " ", text or "").strip()
+    return re.split(r"(?<=[.!?])\s", cleaned, maxsplit=1)[0]
+
+
+def _topic_lines(day: dict) -> list[tuple[str, str, bool]]:
+    rows: list[tuple[str, str, bool]] = []
+    morning = (day or {}).get("morning") or {}
+    for item in morning.get("items") or []:
+        headline = item.get("headline") or ""
+        if headline:
+            rows.append(("오전", headline, True))
+    for line in ((day or {}).get("daily") or {}).get("five") or []:
+        if line and line.strip():
+            rows.append(("오후", line, False))
+    return rows
+
+
+def weekday_week(day: date) -> tuple[date, date, list[str]]:
+    """Monday–Friday of the calendar week that holds this day."""
+    monday = day - timedelta(days=day.weekday())
+    friday = monday + timedelta(days=4)
+    span = [(monday + timedelta(days=offset)).isoformat() for offset in range(5)]
+    return monday, friday, span
+
+
+def review_friday(day: date) -> date:
+    """The finished weekday week. Monday through Thursday still open the previous Friday."""
+    _monday, friday, _span = weekday_week(day)
+    if day.weekday() < 4:
+        friday -= timedelta(days=7)
+    return friday
 
 
 def issues_for(days: dict[str, dict], start: date, end: date) -> list[dict]:
+    span: list[str] = []
+    current = start
+    while current <= end:
+        if current.weekday() < 5:
+            span.append(current.isoformat())
+        current += timedelta(days=1)
     found = []
-    for spec in ISSUE_SPECS:
-        cells = {
-            day: text
-            for day, text in spec["cells"].items()
-            if start <= date.fromisoformat(day) <= end
-        }
-        if len(cells) < 2:
+    for index, spec in enumerate(TOPIC_SPECS):
+        hits = []
+        cells: dict[str, str] = {}
+        for day_key in span:
+            for series, text, as_cell in _topic_lines(days.get(day_key) or {}):
+                if not any(_mentions(alias, text) for alias in spec["aliases"]):
+                    continue
+                hits.append({"date": day_key, "series": series, "headline": _short_source(text)})
+                if as_cell and day_key not in cells:
+                    cells[day_key] = text
+        if len(hits) < TOPIC_MIN:
             continue
-        hits = [
-            {"date": day, "series": series, "headline": headline}
-            for day, series, headline in spec["hits"]
-            if start <= date.fromisoformat(day) <= end
-        ]
-        issue = {"name": spec["name"], "days": len(cells), "cells": cells, "hits": hits}
+        issue = {
+            "name": spec["name"],
+            "days": len({hit["date"] for hit in hits}),
+            "mentions": len(hits),
+            "cells": cells,
+            "hits": hits,
+            "_order": index,
+        }
         points = {}
         if spec.get("metric"):
-            current = start
-            while current <= end:
-                key = current.isoformat()
-                quote = _quote(days.get(key), spec["metric"])
+            for day_key in span:
+                quote = _quote(days.get(day_key), spec["metric"])
                 if quote:
-                    points[key] = quote
-                current += timedelta(days=1)
+                    points[day_key] = quote
         if points:
             issue["metric"] = {"name": spec["metric"], "points": points}
         found.append(issue)
-    return found
+    found.sort(key=lambda item: (-item["mentions"], item["_order"]))
+    for item in found:
+        item.pop("_order", None)
+    return found[:TOPIC_LIMIT]
 
 
 def week_windows(days: dict[str, dict], ends: list[str]) -> dict[str, dict]:
-    """One rolling week per clicked day, including a day with no letter."""
+    """One Mon–Fri week per clicked day. The weekend reads that finished week."""
     windows = {}
     for day_key in ends:
-        end = date.fromisoformat(day_key)
-        start = end - timedelta(days=6)
-        span = [(start + timedelta(days=offset)).isoformat() for offset in range(7)]
+        monday, friday, span = weekday_week(date.fromisoformat(day_key))
         windows[day_key] = {
-            "start": start.isoformat(),
-            "end": day_key,
+            "start": monday.isoformat(),
+            "end": friday.isoformat(),
             "span": span,
-            "issues": issues_for(days, start, end),
-            "themes": themes_for(days, start, end),
+            "issues": issues_for(days, monday, friday),
         }
     return windows
 
@@ -523,9 +502,11 @@ def build_payload(today: date | None = None) -> dict:
     window_end = min(today, latest)
     dates = recent_dates(sorted(days, reverse=True), window_end)
     shown = {day: days[day] for day in dates}
-    ends = list(dict.fromkeys([*dates, today.isoformat()]))
+    friday = review_friday(today).isoformat()
+    ends = list(dict.fromkeys([*dates, friday]))
     return {
         "today": today.isoformat(),
+        "week": friday,
         "dates": dates,
         "days": shown,
         "weeks": week_windows(days, ends),
